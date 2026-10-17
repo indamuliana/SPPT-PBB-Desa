@@ -74,25 +74,29 @@
         <div class="border border-slate-800 p-4 rounded-xl relative">
             <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2.5 mb-3">
                 <div class="flex items-center gap-3">
-                    @if($village->logo_url)
-                        <img src="{{ $village->logo_url }}" alt="Logo Desa" class="w-9 h-9 object-contain">
-                    @elseif($village->regency_logo_url)
-                        <img src="{{ $village->regency_logo_url }}" alt="Logo Kabupaten" class="w-9 h-9 object-contain">
+                    <!-- Logo Kabupaten di Kiri -->
+                    @if($village->regency_logo_url)
+                        <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="w-12 h-12 object-contain shrink-0">
                     @else
-                        <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">
-                            SP
+                        <div class="w-11 h-11 rounded-xl bg-slate-100 border border-slate-300 flex flex-col items-center justify-center font-bold text-slate-700 text-[10px] shrink-0 leading-tight text-center p-1">
+                            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            <span>PEMKAB</span>
                         </div>
                     @endif
                     <div>
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 leading-tight">Pemerintah {{ $village->regency }} &bull; {{ $village->district }}</h2>
-                        <h1 class="text-sm font-black uppercase text-slate-900 leading-tight">PEMERINTAH {{ $village->name }}</h1>
+                        <h2 class="text-xs font-bold text-slate-700 leading-tight">Pemerintah {{ $village->regency }} &bull; {{ str_starts_with(strtolower($village->district ?? ''), 'kecamatan') ? $village->district : 'Kecamatan ' . $village->district }}</h2>
+                        <h1 class="text-base font-black text-slate-900 leading-tight">{{ str_starts_with(strtolower($village->name ?? ''), 'desa') ? $village->name : 'Desa ' . $village->name }}</h1>
                     </div>
                 </div>
-                <div class="text-right">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-slate-900 text-white">
-                        LEMBAR WAJIB PAJAK
-                    </span>
-                    <p class="font-mono text-[11px] font-bold text-slate-800 mt-1">{{ $payment->receipt_number }}</p>
+                <div class="flex items-center gap-3.5">
+                    <div class="text-right">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-slate-900 text-white">
+                            LEMBAR WAJIB PAJAK
+                        </span>
+                        <p class="font-mono text-[11px] font-bold text-slate-800 mt-1">{{ $payment->receipt_number }}</p>
+                    </div>
+                    <!-- Logo Aplikasi di Kanan -->
+                    <img src="{{ asset('images/logo-sadaya.svg') }}" alt="Logo SADAYA PBB" class="w-12 h-12 object-contain shrink-0" title="Aplikasi SADAYA PBB">
                 </div>
             </div>
 
@@ -173,25 +177,29 @@
         <div class="border border-slate-800 p-4 rounded-xl relative">
             <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2.5 mb-3">
                 <div class="flex items-center gap-3">
-                    @if($village->logo_url)
-                        <img src="{{ $village->logo_url }}" alt="Logo Desa" class="w-9 h-9 object-contain">
-                    @elseif($village->regency_logo_url)
-                        <img src="{{ $village->regency_logo_url }}" alt="Logo Kabupaten" class="w-9 h-9 object-contain">
+                    <!-- Logo Kabupaten di Kiri -->
+                    @if($village->regency_logo_url)
+                        <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="w-12 h-12 object-contain shrink-0">
                     @else
-                        <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">
-                            SP
+                        <div class="w-11 h-11 rounded-xl bg-slate-100 border border-slate-300 flex flex-col items-center justify-center font-bold text-slate-700 text-[10px] shrink-0 leading-tight text-center p-1">
+                            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            <span>PEMKAB</span>
                         </div>
                     @endif
                     <div>
-                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 leading-tight">Pemerintah {{ $village->regency }} &bull; {{ $village->district }}</h2>
-                        <h1 class="text-sm font-black uppercase text-slate-900 leading-tight">PEMERINTAH {{ $village->name }}</h1>
+                        <h2 class="text-xs font-bold text-slate-700 leading-tight">Pemerintah {{ $village->regency }} &bull; {{ str_starts_with(strtolower($village->district ?? ''), 'kecamatan') ? $village->district : 'Kecamatan ' . $village->district }}</h2>
+                        <h1 class="text-base font-black text-slate-900 leading-tight">{{ str_starts_with(strtolower($village->name ?? ''), 'desa') ? $village->name : 'Desa ' . $village->name }}</h1>
                     </div>
                 </div>
-                <div class="text-right">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-800 text-white">
-                        LEMBAR ARSIP PEMERINTAH DESA
-                    </span>
-                    <p class="font-mono text-[11px] font-bold text-slate-800 mt-1">{{ $payment->receipt_number }}</p>
+                <div class="flex items-center gap-3.5">
+                    <div class="text-right">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-800 text-white">
+                            LEMBAR ARSIP PEMERINTAH DESA
+                        </span>
+                        <p class="font-mono text-[11px] font-bold text-slate-800 mt-1">{{ $payment->receipt_number }}</p>
+                    </div>
+                    <!-- Logo Aplikasi di Kanan -->
+                    <img src="{{ asset('images/logo-sadaya.svg') }}" alt="Logo SADAYA PBB" class="w-12 h-12 object-contain shrink-0" title="Aplikasi SADAYA PBB">
                 </div>
             </div>
 
@@ -259,8 +267,8 @@
     <!-- ========================================== -->
     <div class="thermal-slip bg-white p-4 border border-slate-300 shadow-sm print:border-none print:shadow-none">
         <div class="text-center pb-2 border-b border-dashed border-slate-400">
-            <h2 class="font-bold text-xs uppercase">{{ $village->name }}</h2>
-            <p class="text-[10px]">PBB-P2 KEC. {{ strtoupper($village->district) }}</p>
+            <p class="text-[10px] font-semibold text-slate-700 leading-tight">Pemerintah {{ $village->regency }} &bull; {{ str_starts_with(strtolower($village->district ?? ''), 'kecamatan') ? $village->district : 'Kecamatan ' . $village->district }}</p>
+            <h2 class="font-bold text-xs uppercase mt-0.5">{{ str_starts_with(strtolower($village->name ?? ''), 'desa') ? $village->name : 'Desa ' . $village->name }}</h2>
             <p class="text-[10px] text-slate-500">{{ $village->phone ?? '' }}</p>
         </div>
 
