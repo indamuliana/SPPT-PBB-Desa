@@ -92,21 +92,26 @@
                     <span>Riwayat Kuitansi</span>
                 </a>
 
-                @if(in_array(auth()->user()->role, ['admin', 'kolektor', 'bendahara']))
                 <div class="pt-3 pb-1 px-3 text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
                     Arus Kas & Setoran
                 </div>
-                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-emerald-200/60 cursor-not-allowed">
-                    <svg class="w-5 h-5 text-emerald-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                <a href="{{ route('handovers.index') }}" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition {{ request()->routeIs('handovers.*') ? 'bg-emerald-800/80 text-white shadow-sm' : 'text-emerald-200 hover:bg-emerald-900/60 hover:text-white' }}">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                     <span>Serah Terima Kas</span>
-                    <span class="ml-auto text-[10px] bg-emerald-900/80 text-emerald-300 px-1.5 py-0.5 rounded">Fase 4</span>
                 </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-emerald-200/60 cursor-not-allowed">
-                    <svg class="w-5 h-5 text-emerald-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                @if(in_array(auth()->user()->role, ['admin', 'kolektor', 'bendahara', 'kades']))
+                <a href="{{ route('deposits.index') }}" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition {{ request()->routeIs('deposits.*') ? 'bg-emerald-800/80 text-white shadow-sm' : 'text-emerald-200 hover:bg-emerald-900/60 hover:text-white' }}">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                     <span>Setoran Bank/Bapenda</span>
-                    <span class="ml-auto text-[10px] bg-emerald-900/80 text-emerald-300 px-1.5 py-0.5 rounded">Fase 4</span>
                 </a>
                 @endif
+                <a href="{{ route('cashbook.index') }}" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition {{ request()->routeIs('cashbook.*') ? 'bg-emerald-800/80 text-white shadow-sm' : 'text-emerald-200 hover:bg-emerald-900/60 hover:text-white' }}">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Buku Kas & Saldo</span>
+                </a>
 
                 @if(auth()->user()->isAdmin())
                 <div class="pt-3 pb-1 px-3 text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">

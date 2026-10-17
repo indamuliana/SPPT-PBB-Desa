@@ -42,6 +42,23 @@ Route::middleware('auth')->group(function () {
         Route::post('/payments/{payment}/cancel/reject', [\App\Http\Controllers\PaymentController::class, 'rejectCancellation'])->name('payments.cancel.reject');
     });
 
+    // Modul Serah Terima Kas (Kasir -> Kolektor)
+    Route::get('/handovers', [\App\Http\Controllers\CashHandoverController::class, 'index'])->name('handovers.index');
+    Route::get('/handovers/create', [\App\Http\Controllers\CashHandoverController::class, 'create'])->name('handovers.create');
+    Route::post('/handovers', [\App\Http\Controllers\CashHandoverController::class, 'store'])->name('handovers.store');
+    Route::get('/handovers/{handover}', [\App\Http\Controllers\CashHandoverController::class, 'show'])->name('handovers.show');
+    Route::post('/handovers/{handover}/receive', [\App\Http\Controllers\CashHandoverController::class, 'receive'])->name('handovers.receive');
+
+    // Modul Setoran Bank / Bapenda (Kolektor -> Bank)
+    Route::get('/deposits', [\App\Http\Controllers\BankDepositController::class, 'index'])->name('deposits.index');
+    Route::get('/deposits/create', [\App\Http\Controllers\BankDepositController::class, 'create'])->name('deposits.create');
+    Route::post('/deposits', [\App\Http\Controllers\BankDepositController::class, 'store'])->name('deposits.store');
+    Route::post('/deposits/{deposit}/approve', [\App\Http\Controllers\BankDepositController::class, 'approve'])->name('deposits.approve')->middleware('role:admin');
+    Route::post('/deposits/{deposit}/reject', [\App\Http\Controllers\BankDepositController::class, 'reject'])->name('deposits.reject')->middleware('role:admin');
+
+    // Buku Kas & Rekonsiliasi Real-Time
+    Route::get('/cashbook', [\App\Http\Controllers\CashBookController::class, 'index'])->name('cashbook.index');
+
     // Admin Only Settings & User Management
     Route::middleware('role:admin')->group(function () {
         Route::get('/settings/village', [VillageProfileController::class, 'edit'])->name('settings.village');

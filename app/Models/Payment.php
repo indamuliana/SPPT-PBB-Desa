@@ -51,6 +51,11 @@ class Payment extends Model
         return $this->hasOne(PaymentCancellation::class)->latestOfMany();
     }
 
+    public function handover(): BelongsTo
+    {
+        return $this->belongsTo(CashHandover::class, 'handover_id');
+    }
+
     public function isValid(): bool
     {
         return $this->status === 'valid';
