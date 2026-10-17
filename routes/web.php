@@ -59,6 +59,21 @@ Route::middleware('auth')->group(function () {
     // Buku Kas & Rekonsiliasi Real-Time
     Route::get('/cashbook', [\App\Http\Controllers\CashBookController::class, 'index'])->name('cashbook.index');
 
+    // Modul Kasus TO (Tanpa Objek / Pemilik Belum Jelas)
+    Route::get('/to-cases', [\App\Http\Controllers\ToCaseController::class, 'index'])->name('to-cases.index');
+    Route::get('/to-cases/create', [\App\Http\Controllers\ToCaseController::class, 'create'])->name('to-cases.create');
+    Route::post('/to-cases', [\App\Http\Controllers\ToCaseController::class, 'store'])->name('to-cases.store');
+    Route::get('/to-cases/{toCase}', [\App\Http\Controllers\ToCaseController::class, 'show'])->name('to-cases.show');
+    Route::post('/to-cases/{toCase}/investigation', [\App\Http\Controllers\ToCaseController::class, 'updateInvestigation'])->name('to-cases.investigation');
+
+    // Modul Mutasi SPPT & Balik Nama NOP
+    Route::get('/mutations', [\App\Http\Controllers\SpptMutationController::class, 'index'])->name('mutations.index');
+    Route::get('/mutations/create', [\App\Http\Controllers\SpptMutationController::class, 'create'])->name('mutations.create');
+    Route::post('/mutations', [\App\Http\Controllers\SpptMutationController::class, 'store'])->name('mutations.store');
+    Route::get('/mutations/{mutation}', [\App\Http\Controllers\SpptMutationController::class, 'show'])->name('mutations.show');
+    Route::post('/mutations/{mutation}/approve', [\App\Http\Controllers\SpptMutationController::class, 'approve'])->name('mutations.approve')->middleware('role:admin');
+    Route::post('/mutations/{mutation}/reject', [\App\Http\Controllers\SpptMutationController::class, 'reject'])->name('mutations.reject')->middleware('role:admin');
+
     // Admin Only Settings & User Management
     Route::middleware('role:admin')->group(function () {
         Route::get('/settings/village', [VillageProfileController::class, 'edit'])->name('settings.village');

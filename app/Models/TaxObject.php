@@ -38,6 +38,16 @@ class TaxObject extends Model
         return $this->hasMany(Sppt::class);
     }
 
+    public function toCases(): HasMany
+    {
+        return $this->hasMany(ToCase::class);
+    }
+
+    public function mutations(): HasMany
+    {
+        return $this->hasMany(SpptMutation::class);
+    }
+
     public function spptForYear(int $year): HasOne
     {
         return $this->hasOne(Sppt::class)->where('tax_year', $year);
