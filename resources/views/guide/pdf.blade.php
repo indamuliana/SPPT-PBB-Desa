@@ -131,9 +131,9 @@
 
     <!-- KOP RESMI DESA -->
     <div class="header-kop">
-        <h2>Pemerintah Kabupaten {{ $village->regency ?? 'Sumedang' }}</h2>
+        <h2>Pemerintah {{ $village->regency ?? 'Kabupaten' }}</h2>
         <h1>Pemerintah Desa {{ $village->name }}</h1>
-        <p>Kecamatan {{ $village->district ?? 'Tanjungsari' }}, Kode Pos: {{ $village->postal_code ?? '45362' }} &bull; Alamat: {{ $village->address ?? 'Kantor Desa' }}</p>
+        <p>{{ str_starts_with(strtolower($village->district ?? ''), 'kecamatan') ? '' : 'Kecamatan ' }}{{ $village->district ?? '' }}, Kode Pos: {{ $village->postal_code ?? '-' }} &bull; Alamat: {{ $village->address ?? 'Kantor Desa' }}</p>
     </div>
 
     <!-- JUDUL DOKUMEN -->

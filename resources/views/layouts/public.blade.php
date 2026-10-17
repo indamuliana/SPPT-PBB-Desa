@@ -1,9 +1,12 @@
+@php
+    $village = $village ?? \App\Models\Village::current();
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full scroll-smooth bg-slate-50">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Portal Informasi & Pelayanan PBB-P2' }} - {{ \App\Models\Village::current()->name }}</title>
+    <title>{{ $title ?? 'Portal Informasi & Pelayanan PBB-P2' }} - {{ $village->name }}</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -46,7 +49,7 @@
                             <span class="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight leading-none">SADAYA PBB</span>
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200/60 hidden sm:inline-block">RESMI</span>
                         </div>
-                        <p class="text-xs text-slate-500 font-medium mt-0.5">Pemerintah {{ \App\Models\Village::current()->name }}</p>
+                        <p class="text-xs text-slate-500 font-medium mt-0.5">Pemerintah Desa {{ $village->name }}</p>
                     </div>
                 </a>
 
@@ -129,16 +132,16 @@
                             SP
                         </div>
                         <div>
-                            <h2 class="font-bold text-white text-sm tracking-tight">SADAYA PBB DESA SUKAHAJI</h2>
+                            <h2 class="font-bold text-white text-sm tracking-tight">SADAYA PBB DESA {{ strtoupper($village->name ?? 'Sukahaji') }}</h2>
                             <p class="text-[11px] text-slate-400">Sistem Administrasi Data Pajak & Pelayanan PBB-P2</p>
                         </div>
                     </div>
                     <p class="text-xs text-slate-400 leading-relaxed max-w-md">
-                        Inovasi digitalisasi tata kelola Pajak Bumi dan Bangunan Perdesaan dan Perkotaan (PBB-P2) Pemerintah Desa Sukahaji untuk mewujudkan pelayanan yang transparan, akuntabel, dan bebas pungutan liar.
+                        Inovasi digitalisasi tata kelola Pajak Bumi dan Bangunan Perdesaan dan Perkotaan (PBB-P2) Pemerintah Desa {{ $village->name ?? 'Sukahaji' }} untuk mewujudkan pelayanan yang transparan, akuntabel, dan bebas pungutan liar.
                     </p>
                     <div class="flex items-center gap-2 pt-2 text-slate-300">
                         <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span class="text-xs font-medium">Kecamatan Tanjungsari, Kabupaten Sumedang, Jawa Barat</span>
+                        <span class="text-xs font-medium">{{ str_starts_with(strtolower($village->district ?? ''), 'kecamatan') ? '' : 'Kecamatan ' }}{{ $village->district ?? '' }}, {{ $village->regency ?? '' }}, {{ $village->province ?? '' }}</span>
                     </div>
                 </div>
 
@@ -197,7 +200,7 @@
             <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
                 <p>&copy; {{ date('Y') }} SADAYA PBB (Sistem Administrasi Data dan Pelayanan Pajak PBB Desa) By Himagrib</p>
                 <p class="flex items-center gap-1">
-                    <span>Pemerintah {{ \App\Models\Village::current()->name }} &bull; Dikembangkan dengan standar GovTech akuntabilitas kas desa</span>
+                    <span>Pemerintah Desa {{ $village->name }} &bull; Dikembangkan dengan standar GovTech akuntabilitas kas desa</span>
                 </p>
             </div>
         </div>

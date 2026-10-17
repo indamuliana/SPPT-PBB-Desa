@@ -306,7 +306,7 @@
                             Rp {{ number_format($stats['target_amount'], 0, ',', '.') }}
                         </p>
                     </div>
-                    <p class="text-xs text-slate-500 pt-1 border-t border-slate-200">Ketetapan DHKP Bapenda Kab. Sumedang</p>
+                    <p class="text-xs text-slate-500 pt-1 border-t border-slate-200">Ketetapan DHKP Bapenda {{ $village->regency ?? 'Kabupaten' }}</p>
                 </div>
 
                 <!-- Realisasi Sah -->
