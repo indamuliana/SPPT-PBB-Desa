@@ -27,6 +27,11 @@ class Dusun extends Model
         return $this->belongsToMany(User::class, 'dusun_user')->withTimestamps();
     }
 
+    public function kadus(): BelongsToMany
+    {
+        return $this->users();
+    }
+
     /**
      * Objek pajak yang berada di dusun ini.
      */

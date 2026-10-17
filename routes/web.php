@@ -8,8 +8,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VillageProfileController;
 use Illuminate\Support\Facades\Route;
 
-// Public Landing Page
+// Public Landing Page & Services
 Route::get('/', [PublicController::class, 'home'])->name('home');
+Route::get('/api/public/check-nop', [PublicController::class, 'checkNop'])->name('public.check-nop')->middleware('throttle:60,1');
 
 // Authentication Routes
 Route::middleware('guest')->group(function () {
