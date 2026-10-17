@@ -195,9 +195,9 @@
 
             <!-- Bottom Copyright & Credit -->
             <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-4">
-                <p>&copy; {{ date('Y') }} Pemerintah Desa Sukahaji &bull; Hak Cipta Dilindungi Undang-Undang.</p>
+                <p>&copy; {{ date('Y') }} SADAYA PBB (Sistem Administrasi Data dan Pelayanan Pajak PBB Desa) By Himagrib</p>
                 <p class="flex items-center gap-1">
-                    <span>Dikembangkan dengan standar GovTech akuntabilitas kas desa</span>
+                    <span>Pemerintah {{ \App\Models\Village::current()->name }} &bull; Dikembangkan dengan standar GovTech akuntabilitas kas desa</span>
                 </p>
             </div>
         </div>

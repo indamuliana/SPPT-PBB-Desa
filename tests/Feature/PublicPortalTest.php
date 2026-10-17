@@ -85,6 +85,7 @@ class PublicPortalTest extends TestCase
         $response->assertSee('Capaian Penerimaan PBB');
         $response->assertSee('Dusun Sukahaji I');
         $response->assertSee('Bapak Kadus 1');
+        $response->assertSee('By Himagrib');
     }
 
     public function test_public_check_nop_returns_valid_data(): void

@@ -252,6 +252,11 @@
                 {{ $slot ?? '' }}
                 @yield('content')
             </main>
+
+            <!-- Footer -->
+            <footer class="px-4 sm:px-6 lg:px-8 py-4 text-center text-xs text-slate-400 border-t border-slate-100 mt-auto">
+                &copy; {{ date('Y') }} SADAYA PBB (Sistem Administrasi Data dan Pelayanan Pajak PBB Desa) By Himagrib
+            </footer>
         </div>
     </div>
 </body>
