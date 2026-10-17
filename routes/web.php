@@ -74,6 +74,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/mutations/{mutation}/approve', [\App\Http\Controllers\SpptMutationController::class, 'approve'])->name('mutations.approve')->middleware('role:admin');
     Route::post('/mutations/{mutation}/reject', [\App\Http\Controllers\SpptMutationController::class, 'reject'])->name('mutations.reject')->middleware('role:admin');
 
+    // Modul Laporan & Ekspor Rekapitulasi
+    Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/realization', [\App\Http\Controllers\ReportController::class, 'realization'])->name('reports.realization');
+    Route::get('/reports/payments', [\App\Http\Controllers\ReportController::class, 'payments'])->name('reports.payments');
+    Route::get('/reports/cash-flow', [\App\Http\Controllers\ReportController::class, 'cashFlow'])->name('reports.cash-flow');
+    Route::get('/reports/to-and-mutations', [\App\Http\Controllers\ReportController::class, 'toAndMutations'])->name('reports.to-and-mutations');
+
     // Admin Only Settings & User Management
     Route::middleware('role:admin')->group(function () {
         Route::get('/settings/village', [VillageProfileController::class, 'edit'])->name('settings.village');
