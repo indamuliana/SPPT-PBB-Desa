@@ -19,10 +19,28 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
+// Public Receipt Verification via QR Code
+Route::get('/verifikasi/{token}', [\App\Http\Controllers\PublicVerificationController::class, 'verify'])
+    ->name('verification.verify')
+    ->middleware('throttle:60,1');
+
 // Protected Application Routes
 Route::middleware('auth')->group(function () {
     // Dashboard accessible by all authenticated roles
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Loket Kasir POS & Transaksi Pembayaran
+    Route::get('/pos', [\App\Http\Controllers\PaymentController::class, 'pos'])->name('payments.pos');
+    Route::post('/payments', [\App\Http\Controllers\PaymentController::class, 'store'])->name('payments.store');
+    Route::get('/payments/history', [\App\Http\Controllers\PaymentController::class, 'history'])->name('payments.history');
+    Route::get('/payments/{payment}/receipt', [\App\Http\Controllers\PaymentController::class, 'receipt'])->name('payments.receipt');
+    Route::post('/payments/{payment}/cancel', [\App\Http\Controllers\PaymentController::class, 'requestCancellation'])->name('payments.cancel.request');
+
+    // Admin Pembatalan Transaksi Approval
+    Route::middleware('role:admin')->group(function () {
+        Route::post('/payments/{payment}/cancel/approve', [\App\Http\Controllers\PaymentController::class, 'approveCancellation'])->name('payments.cancel.approve');
+        Route::post('/payments/{payment}/cancel/reject', [\App\Http\Controllers\PaymentController::class, 'rejectCancellation'])->name('payments.cancel.reject');
+    });
 
     // Admin Only Settings & User Management
     Route::middleware('role:admin')->group(function () {

@@ -78,16 +78,19 @@
                     <span>Wajib Pajak (WP)</span>
                 </a>
 
-                @if(in_array(auth()->user()->role, ['admin', 'kadus', 'kolektor']))
                 <div class="pt-3 pb-1 px-3 text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
-                    Pelayanan Loket
+                    Pelayanan Loket & Kuitansi
                 </div>
-                <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-emerald-200/60 cursor-not-allowed">
-                    <svg class="w-5 h-5 text-emerald-400/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <a href="{{ route('payments.pos') }}" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition {{ request()->routeIs('payments.pos') ? 'bg-emerald-800/80 text-white shadow-sm' : 'text-emerald-200 hover:bg-emerald-900/60 hover:text-white' }}">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     <span>Loket Kasir / POS</span>
-                    <span class="ml-auto text-[10px] bg-emerald-900/80 text-emerald-300 px-1.5 py-0.5 rounded">Fase 3</span>
                 </a>
-                @endif
+                <a href="{{ route('payments.history') }}" 
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition {{ request()->routeIs('payments.history', 'payments.receipt') ? 'bg-emerald-800/80 text-white shadow-sm' : 'text-emerald-200 hover:bg-emerald-900/60 hover:text-white' }}">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                    <span>Riwayat Kuitansi</span>
+                </a>
 
                 @if(in_array(auth()->user()->role, ['admin', 'kolektor', 'bendahara']))
                 <div class="pt-3 pb-1 px-3 text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
