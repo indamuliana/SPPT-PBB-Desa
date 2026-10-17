@@ -90,6 +90,8 @@
                         <p class="text-[11px] text-slate-400 mt-1">Tarif resmi SPPT (standar 0.100% atau 0.1%).</p>
                     </div>
                 </div>
+            </div>
+
             <!-- Section 4: Identitas Visual, Logo Resmi & Foto Hero Desa -->
             <div x-data="{
                 desaPreview: '{{ $village->logo_url }}',
@@ -110,22 +112,26 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Card 1: Logo Aplikasi / Desa -->
-                    <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <label class="block text-xs font-bold text-slate-800">Logo Aplikasi / Desa</label>
-                            <span class="text-[10px] text-slate-400">PNG / JPG / SVG (Maks. 2MB)</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-20 h-16 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
+                    <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-xs font-bold text-slate-800">Logo Aplikasi / Desa</label>
+                                <span class="text-[10px] text-slate-400">PNG / JPG / SVG (Maks. 2MB)</span>
+                            </div>
+                            
+                            <!-- Dedicated Preview Box on Top -->
+                            <div class="w-full h-24 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-2 shadow-2xs" style="height: 96px; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                                 <template x-if="desaPreview">
-                                    <img :src="desaPreview" alt="Logo Aplikasi" class="max-h-full max-w-full w-auto h-auto object-contain">
+                                    <img :src="desaPreview" alt="Logo Aplikasi" style="max-height: 80px; max-width: 100%; width: auto; height: auto; object-fit: contain; display: block;" class="max-h-20 max-w-full w-auto h-auto object-contain">
                                 </template>
                                 <template x-if="!desaPreview">
                                     <span class="text-[10px] text-slate-400 font-bold text-center leading-tight">Belum Ada Logo</span>
                                 </template>
                             </div>
-                            <div class="flex-1 space-y-1.5">
-                                <input type="file" name="logo_desa" accept="image/*" @change="previewImage($event, 'desaPreview')" class="block w-full text-xs text-slate-500 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+
+                            <!-- Upload Controls Below -->
+                            <div class="space-y-2 pt-1">
+                                <input type="file" name="logo_desa" accept="image/*" @change="previewImage($event, 'desaPreview')" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-slate-200 rounded-xl bg-white p-1">
                                 @if($village->logo_path)
                                 <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-rose-600 hover:text-rose-700">
                                     <input type="checkbox" name="remove_logo_desa" value="1" class="rounded border-slate-300 text-rose-600 focus:ring-rose-500">
@@ -134,29 +140,34 @@
                                 @endif
                             </div>
                         </div>
-                        <p class="text-[11px] text-slate-500 leading-relaxed">
+
+                        <p class="text-[11px] text-slate-500 leading-relaxed border-t border-slate-200/60 pt-2">
                             Ditampilkan sebagai logo aplikasi di sisi kanan kop kuitansi bukti pembayaran PBB, navigasi portal publik, dan dokumen resmi desa.
                         </p>
                         @error('logo_desa')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
                     </div>
 
                     <!-- Card 2: Logo Kabupaten -->
-                    <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <label class="block text-xs font-bold text-slate-800">Logo Pemerintah Kabupaten / Kota</label>
-                            <span class="text-[10px] text-slate-400">PNG / JPG / SVG (Maks. 2MB)</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="w-20 h-16 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
+                    <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-xs font-bold text-slate-800">Logo Pemerintah Kabupaten / Kota</label>
+                                <span class="text-[10px] text-slate-400">PNG / JPG / SVG (Maks. 2MB)</span>
+                            </div>
+
+                            <!-- Dedicated Preview Box on Top -->
+                            <div class="w-full h-24 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-2 shadow-2xs" style="height: 96px; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden;">
                                 <template x-if="regencyPreview">
-                                    <img :src="regencyPreview" alt="Logo Kabupaten" class="max-h-full max-w-full w-auto h-auto object-contain">
+                                    <img :src="regencyPreview" alt="Logo Kabupaten" style="max-height: 80px; max-width: 100%; width: auto; height: auto; object-fit: contain; display: block;" class="max-h-20 max-w-full w-auto h-auto object-contain">
                                 </template>
                                 <template x-if="!regencyPreview">
                                     <span class="text-[10px] text-slate-400 font-bold text-center leading-tight">Belum Ada Logo</span>
                                 </template>
                             </div>
-                            <div class="flex-1 space-y-1.5">
-                                <input type="file" name="logo_kabupaten" accept="image/*" @change="previewImage($event, 'regencyPreview')" class="block w-full text-xs text-slate-500 file:mr-2.5 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+
+                            <!-- Upload Controls Below -->
+                            <div class="space-y-2 pt-1">
+                                <input type="file" name="logo_kabupaten" accept="image/*" @change="previewImage($event, 'regencyPreview')" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-slate-200 rounded-xl bg-white p-1">
                                 @if($village->regency_logo_path)
                                 <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-rose-600 hover:text-rose-700">
                                     <input type="checkbox" name="remove_logo_kabupaten" value="1" class="rounded border-slate-300 text-rose-600 focus:ring-rose-500">
@@ -165,7 +176,8 @@
                                 @endif
                             </div>
                         </div>
-                        <p class="text-[11px] text-slate-500 leading-relaxed">
+
+                        <p class="text-[11px] text-slate-500 leading-relaxed border-t border-slate-200/60 pt-2">
                             Lambang resmi Pemkab/Pemkot untuk sisi kiri kop kuitansi tanda terima sah dan laporan rekonsiliasi kas daerah.
                         </p>
                         @error('logo_kabupaten')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
@@ -182,8 +194,8 @@
                         </div>
                         
                         <div class="space-y-3">
-                            <div class="w-full h-44 sm:h-56 rounded-xl border border-slate-200 bg-slate-900 overflow-hidden relative shadow-xs">
-                                <img :src="heroPreview" alt="Foto Kantor Desa" class="w-full h-full object-cover object-center">
+                            <div class="w-full h-44 sm:h-56 rounded-xl border border-slate-200 bg-slate-900 overflow-hidden relative shadow-xs" style="min-height: 180px; max-height: 240px; width: 100%; position: relative; overflow: hidden;">
+                                <img :src="heroPreview" alt="Foto Kantor Desa" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" class="w-full h-full object-cover object-center">
                                 <div class="absolute bottom-2 left-2 px-2.5 py-1 rounded-lg bg-slate-950/70 text-white text-[11px] font-medium backdrop-blur-xs flex items-center gap-1.5">
                                     <span class="w-2 h-2 rounded-full {{ $village->hero_image_path ? 'bg-emerald-400' : 'bg-amber-400' }}"></span>
                                     <span>{{ $village->hero_image_path ? 'Foto Kustom Desa Aktif' : 'Foto Default Sistem' }}</span>
@@ -192,7 +204,7 @@
 
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
                                 <div class="flex-1">
-                                    <input type="file" name="hero_image" accept="image/*" @change="previewImage($event, 'heroPreview')" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer">
+                                    <input type="file" name="hero_image" accept="image/*" @change="previewImage($event, 'heroPreview')" class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 cursor-pointer border border-slate-200 rounded-xl bg-white p-1">
                                 </div>
                                 @if($village->hero_image_path)
                                 <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-rose-600 hover:text-rose-700 shrink-0">
