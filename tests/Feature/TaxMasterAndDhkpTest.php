@@ -203,4 +203,101 @@ class TaxMasterAndDhkpTest extends TestCase
         $this->assertTrue($sppt->isPaid());
         $this->assertEquals(0, $sppt->remaining_bill);
     }
+
+    public function test_admin_can_download_dhkp_template_xlsx(): void
+    {
+        $response = $this->actingAs($this->admin)->get('/sppts/import/template?format=xlsx&tax_year=2026');
+        $response->assertStatus(200);
+        $this->assertStringContainsString('Template_DHKP_SPPT', $response->headers->get('content-disposition', ''));
+        $this->assertStringContainsString('.xlsx', $response->headers->get('content-disposition', ''));
+    }
+
+    public function test_admin_can_download_dhkp_template_csv(): void
+    {
+        $response = $this->actingAs($this->admin)->get('/sppts/import/template?format=csv&tax_year=2026');
+        $response->assertStatus(200);
+        $this->assertStringContainsString('Template_DHKP_SPPT', $response->headers->get('content-disposition', ''));
+        $this->assertStringContainsString('.csv', $response->headers->get('content-disposition', ''));
+    }
+
+    public function test_generated_template_can_be_imported_cleanly_with_components_and_nik(): void
+    {
+        \App\Models\Dusun::create(['name' => 'Dusun I Babakan']);
+        \App\Models\Dusun::create(['name' => 'Dusun II Sukajaya']);
+        \App\Models\Dusun::create(['name' => 'Dusun III Mekarsari']);
+
+        $service = new DhkpImportService();
+        $tempCsv = $service->generateTemplate('csv', 2026);
+
+        $result = $service->import($tempCsv, 2026);
+        @unlink($tempCsv);
+
+        $this->assertEquals(3, $result['imported']);
+        $this->assertEquals(0, $result['skipped']);
+        $this->assertEmpty($result['errors']);
+
+        // Check NIK and Taxpayer
+        $wp1 = Taxpayer::where('name', 'H. AHMAD SUBAGJA')->first();
+        $this->assertNotNull($wp1);
+        $this->assertEquals('3211140105820001', $wp1->nik);
+
+        // Check TaxObject and Dusun mapping
+        $to1 = TaxObject::where('nop', '321114000100100010')->first();
+        $this->assertNotNull($to1);
+        $this->assertNotNull($to1->dusun_id);
+
+        // Check 4 Components for row 3 (which has bumi_bersama and bangunan_bersama)
+        $to3 = TaxObject::where('nop', '321114000100300030')->first();
+        $this->assertNotNull($to3);
+        $this->assertDatabaseHas('tax_object_components', [
+            'tax_object_id' => $to3->id,
+            'type' => 'bumi_bersama',
+            'area_m2' => 25.00,
+        ]);
+        $this->assertDatabaseHas('tax_object_components', [
+            'tax_object_id' => $to3->id,
+            'type' => 'bangunan_bersama',
+            'area_m2' => 15.00,
+        ]);
+    }
+
+    public function test_dhkp_import_preserves_financial_invariant_for_paid_sppt(): void
+    {
+        $wp = Taxpayer::create(['name' => 'Warga Taat']);
+        $op = TaxObject::create([
+            'nop' => '321205000100999999',
+            'taxpayer_id' => $wp->id,
+            'status' => 'normal',
+        ]);
+
+        $sppt = Sppt::create([
+            'tax_object_id' => $op->id,
+            'tax_year' => 2026,
+            'pbb_terutang' => 150000,
+            'total_bill' => 150000,
+            'paid_amount' => 100000, // already partially paid in cashier
+            'status' => 'partial',
+        ]);
+
+        // Attempt import with a lower bill (50000) than what was already paid (100000)
+        $csvContent = "nop,nama_wp,pbb_terutang,tahun\n"
+            . "321205000100999999,Warga Taat,50000,2026\n";
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'dhkp_test_') . '.csv';
+        file_put_contents($tempFile, $csvContent);
+
+        $service = new DhkpImportService();
+        $result = $service->import($tempFile, 2026);
+        @unlink($tempFile);
+
+        $this->assertEquals(1, $result['imported']);
+        $this->assertNotEmpty($result['errors']);
+        $this->assertStringContainsString('melindungi saldo kasir', $result['errors'][0]);
+
+        $sppt->refresh();
+        // Total bill must NOT be lowered below 100000
+        $this->assertEquals(150000, (float)$sppt->total_bill);
+        $this->assertEquals(100000, (float)$sppt->paid_amount);
+        $this->assertEquals('partial', $sppt->status);
+    }
 }

@@ -128,6 +128,7 @@ Route::middleware('auth')->group(function () {
         Route::put('/sppts/{sppt}', [\App\Http\Controllers\SpptController::class, 'update'])->name('sppts.update');
         Route::delete('/sppts/{sppt}', [\App\Http\Controllers\SpptController::class, 'destroy'])->name('sppts.destroy');
         Route::get('/sppts/import', [\App\Http\Controllers\SpptController::class, 'importView'])->name('sppts.import.view');
+        Route::get('/sppts/import/template', [\App\Http\Controllers\SpptController::class, 'downloadTemplate'])->name('sppts.import.template');
         Route::post('/sppts/import', [\App\Http\Controllers\SpptController::class, 'importProcess'])->name('sppts.import.process');
     });
 

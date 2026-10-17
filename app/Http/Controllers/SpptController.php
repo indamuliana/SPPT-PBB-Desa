@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class SpptController extends Controller
 {
@@ -113,7 +114,26 @@ class SpptController extends Controller
     public function importView(): View
     {
         $village = Village::current();
-        return view('sppts.import', compact('village'));
+        $dusuns = Dusun::orderBy('name')->get();
+        return view('sppts.import', compact('village', 'dusuns'));
+    }
+
+    public function downloadTemplate(Request $request, DhkpImportService $importService): BinaryFileResponse
+    {
+        $format = strtolower($request->query('format', 'xlsx')) === 'csv' ? 'csv' : 'xlsx';
+        $taxYear = (int)$request->query('tax_year', Village::current()?->active_tax_year ?? (int)date('Y'));
+
+        $filePath = $importService->generateTemplate($format, $taxYear);
+        $villageName = preg_replace('/[^A-Za-z0-9]/', '_', Village::current()?->name ?? 'Desa');
+        $fileName = "Template_DHKP_SPPT_{$villageName}_{$taxYear}.{$format}";
+
+        $contentType = $format === 'csv'
+            ? 'text/csv'
+            : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+        return response()->download($filePath, $fileName, [
+            'Content-Type' => $contentType,
+        ])->deleteFileAfterSend(true);
     }
 
     public function importProcess(Request $request, DhkpImportService $importService): RedirectResponse
