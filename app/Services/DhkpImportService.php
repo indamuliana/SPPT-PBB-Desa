@@ -495,4 +495,143 @@ class DhkpImportService
         $clean = preg_replace('/[^0-9.]/', '', $str);
         return is_numeric($clean) ? (float)$clean : 0.0;
     }
+
+    /**
+     * Import / roll-forward SPPT and components from a previous tax year.
+     *
+     * @param array{
+     *     dusun_id?: ?int,
+     *     on_duplicate?: string,
+     *     copy_components?: bool,
+     *     pbb_adjustment_percent?: float
+     * } $options
+     * @return array{total_rows: int, imported: int, skipped: int, errors: array<string>}
+     */
+    public function importFromPreviousYear(int $sourceYear, int $targetYear, array $options = []): array
+    {
+        if ($sourceYear === $targetYear) {
+            throw new \InvalidArgumentException('Tahun pajak sumber dan tahun pajak tujuan tidak boleh sama.');
+        }
+
+        $dusunId = ! empty($options['dusun_id']) ? (int)$options['dusun_id'] : null;
+        $onDuplicate = $options['on_duplicate'] ?? 'skip';
+        $copyComponents = $options['copy_components'] ?? true;
+        $adjustmentPercent = (float)($options['pbb_adjustment_percent'] ?? 0);
+        $multiplier = 1 + ($adjustmentPercent / 100);
+
+        $sourceSppts = Sppt::with(['taxObject.components' => function ($q) use ($sourceYear) {
+                $q->where('tax_year', $sourceYear);
+            }])
+            ->where('tax_year', $sourceYear)
+            ->whereHas('taxObject', function ($q) use ($dusunId) {
+                $q->where('status', '!=', 'deactivated');
+                if ($dusunId) {
+                    $q->where('dusun_id', $dusunId);
+                }
+            })
+            ->get();
+
+        $totalSource = $sourceSppts->count();
+        $imported = 0;
+        $skipped = 0;
+        $errors = [];
+
+        DB::transaction(function () use (
+            $sourceSppts,
+            $sourceYear,
+            $targetYear,
+            $onDuplicate,
+            $copyComponents,
+            $multiplier,
+            &$imported,
+            &$skipped,
+            &$errors
+        ) {
+            foreach ($sourceSppts as $src) {
+                $taxObject = $src->taxObject;
+                if (! $taxObject || $taxObject->status === 'deactivated') {
+                    $skipped++;
+                    continue;
+                }
+
+                $targetSppt = Sppt::where('tax_object_id', $taxObject->id)
+                    ->where('tax_year', $targetYear)
+                    ->first();
+
+                $newPbb = max(0, round((float)$src->pbb_terutang * $multiplier));
+
+                if ($targetSppt) {
+                    if ($onDuplicate === 'skip') {
+                        $skipped++;
+                        continue;
+                    }
+
+                    if ((float)$targetSppt->paid_amount > 0) {
+                        $errors[] = "NOP {$taxObject->formatted_nop}: Dilewati karena sudah ada pembayaran kasir Rp " . number_format($targetSppt->paid_amount, 0, ',', '.') . " di tahun {$targetYear}.";
+                        $skipped++;
+                        continue;
+                    }
+
+                    $targetSppt->update([
+                        'njop_dasar' => $src->njop_dasar,
+                        'njoptkp' => $src->njoptkp,
+                        'njop_perhitungan' => $src->njop_perhitungan,
+                        'tarif_percent' => $src->tarif_percent,
+                        'pbb_terutang' => $newPbb,
+                        'total_bill' => $newPbb,
+                        'is_to_blocked' => $taxObject->isTo(),
+                        'dhkp_row_ref' => $src->dhkp_row_ref ? "Salin {$sourceYear}: " . $src->dhkp_row_ref : null,
+                    ]);
+
+                    $imported++;
+                } else {
+                    Sppt::create([
+                        'tax_object_id' => $taxObject->id,
+                        'tax_year' => $targetYear,
+                        'due_date' => "{$targetYear}-09-30",
+                        'njop_dasar' => $src->njop_dasar,
+                        'njoptkp' => $src->njoptkp,
+                        'njop_perhitungan' => $src->njop_perhitungan,
+                        'tarif_percent' => $src->tarif_percent,
+                        'pbb_terutang' => $newPbb,
+                        'fine_amount' => 0,
+                        'total_bill' => $newPbb,
+                        'paid_amount' => 0,
+                        'status' => 'unpaid',
+                        'is_to_blocked' => $taxObject->isTo(),
+                        'dhkp_row_ref' => $src->dhkp_row_ref ? "Salin {$sourceYear}: " . $src->dhkp_row_ref : null,
+                    ]);
+
+                    $imported++;
+                }
+
+                if ($copyComponents && $taxObject->components->isNotEmpty()) {
+                    foreach ($taxObject->components as $comp) {
+                        TaxObjectComponent::firstOrCreate(
+                            [
+                                'tax_object_id' => $taxObject->id,
+                                'type' => $comp->type,
+                                'tax_year' => $targetYear,
+                            ],
+                            [
+                                'area_m2' => $comp->area_m2,
+                                'class_code' => $comp->class_code,
+                                'njop_per_m2' => $comp->njop_per_m2,
+                                'total_njop' => $comp->total_njop,
+                            ]
+                        );
+                    }
+                }
+            }
+        });
+
+        AuditLog::log('create', "Import SPPT dari tahun {$sourceYear} ke {$targetYear}: Berhasil {$imported}, Dilewati {$skipped} dari total {$totalSource} data.");
+
+        return [
+            'total_rows' => $totalSource,
+            'imported' => $imported,
+            'skipped' => $skipped,
+            'errors' => array_slice($errors, 0, 20),
+        ];
+    }
 }

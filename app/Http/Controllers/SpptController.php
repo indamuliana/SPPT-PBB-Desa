@@ -111,11 +111,17 @@ class SpptController extends Controller
         return redirect()->route('sppts.index', ['year' => $sppt->tax_year])->with('success', 'Data SPPT berhasil disimpan.');
     }
 
-    public function importView(): View
+    public function importView(Request $request): View
     {
         $village = Village::current();
         $dusuns = Dusun::orderBy('name')->get();
-        return view('sppts.import', compact('village', 'dusuns'));
+        $initialMode = $request->query('mode', 'file');
+        $availableSourceYears = Sppt::select('tax_year', DB::raw('count(*) as sppt_count'))
+            ->groupBy('tax_year')
+            ->orderByDesc('tax_year')
+            ->get();
+
+        return view('sppts.import', compact('village', 'dusuns', 'initialMode', 'availableSourceYears'));
     }
 
     public function downloadTemplate(Request $request, DhkpImportService $importService): BinaryFileResponse
@@ -161,6 +167,44 @@ class SpptController extends Controller
         }
 
         return redirect()->route('sppts.index', ['year' => $taxYear])->with('success', $msg);
+    }
+
+    public function importFromPreviousYear(Request $request, DhkpImportService $importService): RedirectResponse
+    {
+        $validated = $request->validate([
+            'source_year' => ['required', 'integer', 'min:2000', 'max:2099'],
+            'target_year' => ['required', 'integer', 'min:2000', 'max:2099', 'different:source_year'],
+            'dusun_id' => ['nullable', 'exists:dusuns,id'],
+            'on_duplicate' => ['required', 'in:skip,update'],
+            'copy_components' => ['nullable', 'boolean'],
+            'pbb_adjustment_percent' => ['nullable', 'numeric', 'min:-100', 'max:500'],
+        ], [
+            'source_year.required' => 'Pilih tahun pajak asal / sumber data.',
+            'target_year.required' => 'Tentukan tahun pajak tujuan salinan data.',
+            'target_year.different' => 'Tahun pajak tujuan tidak boleh sama dengan tahun pajak asal.',
+            'on_duplicate.required' => 'Pilih tindakan jika data SPPT sudah ada di tahun tujuan.',
+        ]);
+
+        $sourceYear = (int)$validated['source_year'];
+        $targetYear = (int)$validated['target_year'];
+        $options = [
+            'dusun_id' => ! empty($validated['dusun_id']) ? (int)$validated['dusun_id'] : null,
+            'on_duplicate' => $validated['on_duplicate'] ?? 'skip',
+            'copy_components' => $request->boolean('copy_components', true),
+            'pbb_adjustment_percent' => (float)($validated['pbb_adjustment_percent'] ?? 0),
+        ];
+
+        $result = $importService->importFromPreviousYear($sourceYear, $targetYear, $options);
+
+        $msg = "Salin Data SPPT Selesai: {$result['imported']} data berhasil disalin ke tahun {$targetYear}, {$result['skipped']} data dilewati dari total {$result['total_rows']} SPPT di tahun {$sourceYear}.";
+
+        if (! empty($result['errors'])) {
+            return redirect()->route('sppts.index', ['year' => $targetYear])
+                ->with('success', $msg)
+                ->with('import_warnings', $result['errors']);
+        }
+
+        return redirect()->route('sppts.index', ['year' => $targetYear])->with('success', $msg);
     }
 
     public function createUnified(): View

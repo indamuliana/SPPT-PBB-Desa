@@ -134,6 +134,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/sppts/import', [\App\Http\Controllers\SpptController::class, 'importView'])->name('sppts.import.view');
         Route::get('/sppts/import/template', [\App\Http\Controllers\SpptController::class, 'downloadTemplate'])->name('sppts.import.template');
         Route::post('/sppts/import', [\App\Http\Controllers\SpptController::class, 'importProcess'])->name('sppts.import.process');
+        Route::post('/sppts/import-previous-year', [\App\Http\Controllers\SpptController::class, 'importFromPreviousYear'])->name('sppts.import.previous-year');
     });
 
     // Audit logs for Admin, Kades, and Bendahara

@@ -300,4 +300,114 @@ class TaxMasterAndDhkpTest extends TestCase
         $this->assertEquals(100000, (float)$sppt->paid_amount);
         $this->assertEquals('partial', $sppt->status);
     }
+
+    public function test_admin_can_import_sppt_from_previous_year_with_components(): void
+    {
+        $wp = Taxpayer::create(['name' => 'Warga Taat 2025']);
+        $op = TaxObject::create([
+            'nop' => '321205000100777001',
+            'taxpayer_id' => $wp->id,
+            'address' => 'Jl. Blok Babakan No 5',
+            'status' => 'normal',
+        ]);
+
+        // Component in 2025
+        \App\Models\TaxObjectComponent::create([
+            'tax_object_id' => $op->id,
+            'type' => 'bumi',
+            'area_m2' => 200,
+            'tax_year' => 2025,
+        ]);
+
+        // SPPT in 2025
+        Sppt::create([
+            'tax_object_id' => $op->id,
+            'tax_year' => 2025,
+            'pbb_terutang' => 120000,
+            'total_bill' => 120000,
+            'status' => 'paid',
+            'paid_amount' => 120000,
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/sppts/import-previous-year', [
+            'source_year' => 2025,
+            'target_year' => 2026,
+            'on_duplicate' => 'skip',
+            'copy_components' => 1,
+            'pbb_adjustment_percent' => 0,
+        ]);
+
+        $response->assertRedirect('/sppts?year=2026');
+        $response->assertSessionHas('success');
+
+        // Verify SPPT 2026 was created
+        $this->assertDatabaseHas('sppts', [
+            'tax_object_id' => $op->id,
+            'tax_year' => 2026,
+            'pbb_terutang' => 120000,
+            'total_bill' => 120000,
+            'paid_amount' => 0, // must be reset to 0 in new year!
+            'status' => 'unpaid', // must be reset to unpaid!
+        ]);
+
+        // Verify component was copied to 2026
+        $this->assertDatabaseHas('tax_object_components', [
+            'tax_object_id' => $op->id,
+            'type' => 'bumi',
+            'area_m2' => 200,
+            'tax_year' => 2026,
+        ]);
+    }
+
+    public function test_import_from_previous_year_skips_existing_sppt(): void
+    {
+        $wp = Taxpayer::create(['name' => 'Warga Sudah Ada']);
+        $op = TaxObject::create([
+            'nop' => '321205000100777002',
+            'taxpayer_id' => $wp->id,
+            'status' => 'normal',
+        ]);
+
+        Sppt::create([
+            'tax_object_id' => $op->id,
+            'tax_year' => 2025,
+            'pbb_terutang' => 80000,
+            'total_bill' => 80000,
+            'status' => 'paid',
+            'paid_amount' => 80000,
+        ]);
+
+        // SPPT 2026 already exists with 90000
+        Sppt::create([
+            'tax_object_id' => $op->id,
+            'tax_year' => 2026,
+            'pbb_terutang' => 90000,
+            'total_bill' => 90000,
+            'paid_amount' => 0,
+            'status' => 'unpaid',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/sppts/import-previous-year', [
+            'source_year' => 2025,
+            'target_year' => 2026,
+            'on_duplicate' => 'skip',
+        ]);
+
+        $response->assertRedirect('/sppts?year=2026');
+
+        // Bill must remain 90000 (not overwritten)
+        $sppt2026 = Sppt::where('tax_object_id', $op->id)->where('tax_year', 2026)->first();
+        $this->assertEquals(90000, (float)$sppt2026->pbb_terutang);
+    }
+
+    public function test_non_admin_cannot_import_from_previous_year(): void
+    {
+        $response = $this->actingAs($this->kadus)->post('/sppts/import-previous-year', [
+            'source_year' => 2025,
+            'target_year' => 2026,
+            'on_duplicate' => 'skip',
+        ]);
+
+        $response->assertStatus(403);
+    }
 }
