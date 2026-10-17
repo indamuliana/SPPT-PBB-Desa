@@ -15,16 +15,27 @@ class DashboardController extends Controller
         $village = Village::current();
         $user = $request->user();
 
-        // In Phase 1, provide foundational counters and audit trail
+        $activeYear = $village->active_tax_year;
+        $spptQuery = \App\Models\Sppt::where('tax_year', $activeYear);
+
+        $totalBills = (clone $spptQuery)->sum('total_bill');
+        $realizationAmount = (clone $spptQuery)->sum('paid_amount');
+        $totalSppts = (clone $spptQuery)->count();
+
+        // Target defaults to village target_amount or total SPPT bills if target is not set
+        $targetAmount = $village->target_amount > 0 ? (float)$village->target_amount : (float)$totalBills;
+        $remainingAmount = max(0, $targetAmount - $realizationAmount);
+        $realizationPercent = $targetAmount > 0 ? round(($realizationAmount / $targetAmount) * 100, 1) : 0;
+
         $stats = [
             'village_name' => $village->name,
-            'active_tax_year' => $village->active_tax_year,
-            'target_amount' => $village->target_amount,
-            'realization_amount' => 0,
-            'realization_percent' => 0,
-            'remaining_amount' => $village->target_amount,
+            'active_tax_year' => $activeYear,
+            'target_amount' => $targetAmount,
+            'realization_amount' => $realizationAmount,
+            'realization_percent' => $realizationPercent,
+            'remaining_amount' => $remainingAmount,
             'total_users' => User::count(),
-            'total_sppts' => 0,
+            'total_sppts' => $totalSppts,
             'cash_in_hand' => 0,
             'unremitted_deposit' => 0,
         ];
