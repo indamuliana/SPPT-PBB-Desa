@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\AuditLog;
 use App\Models\Sppt;
 use App\Models\TaxObject;
+use App\Models\TaxObjectComponent;
+use App\Models\Taxpayer;
 use App\Models\Village;
 use App\Services\DhkpImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class SpptController extends Controller
@@ -137,5 +140,174 @@ class SpptController extends Controller
         }
 
         return redirect()->route('sppts.index', ['year' => $taxYear])->with('success', $msg);
+    }
+
+    public function createUnified(): View
+    {
+        $village = Village::current();
+        $taxpayers = Taxpayer::orderBy('name')->get();
+        $defaultYear = $village->active_tax_year;
+        $taxRate = (float)($village->tax_rate_percent ?? 0.100);
+
+        return view('sppts.create-unified', compact('village', 'taxpayers', 'defaultYear', 'taxRate'));
+    }
+
+    public function storeUnified(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            // WP
+            'taxpayer_mode' => ['required', 'in:existing,new'],
+            'taxpayer_id' => ['required_if:taxpayer_mode,existing', 'nullable', 'exists:taxpayers,id'],
+            'new_taxpayer_name' => ['required_if:taxpayer_mode,new', 'nullable', 'string', 'max:255'],
+            'new_taxpayer_nik' => ['nullable', 'string', 'max:20'],
+            'new_taxpayer_phone' => ['nullable', 'string', 'max:50'],
+            'new_taxpayer_address' => ['nullable', 'string'],
+            'new_taxpayer_rt' => ['nullable', 'string', 'max:5'],
+            'new_taxpayer_rw' => ['nullable', 'string', 'max:5'],
+
+            // NOP
+            'nop' => ['required', 'string'],
+            'object_address' => ['nullable', 'string'],
+            'object_rt' => ['nullable', 'string', 'max:5'],
+            'object_rw' => ['nullable', 'string', 'max:5'],
+            'object_dusun' => ['nullable', 'string', 'max:50'],
+
+            // 4 Components
+            'bumi_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bumi_class_code' => ['nullable', 'string', 'max:10'],
+            'bumi_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+
+            'bangunan_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_class_code' => ['nullable', 'string', 'max:10'],
+            'bangunan_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+
+            'bumi_bersama_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bumi_bersama_class_code' => ['nullable', 'string', 'max:10'],
+            'bumi_bersama_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+
+            'bangunan_bersama_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_bersama_class_code' => ['nullable', 'string', 'max:10'],
+            'bangunan_bersama_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+
+            // SPPT
+            'tax_year' => ['required', 'integer', 'min:2000', 'max:2099'],
+            'njoptkp' => ['nullable', 'numeric', 'min:0'],
+            'due_date' => ['nullable', 'date'],
+        ]);
+
+        $cleanNop = preg_replace('/[^0-9]/', '', $validated['nop']);
+        if (strlen($cleanNop) < 10) {
+            return back()->withInput()->withErrors(['nop' => 'Format NOP tidak valid (minimal 10 digit).']);
+        }
+
+        $village = Village::current();
+        $taxYear = (int)$validated['tax_year'];
+
+        $sppt = DB::transaction(function () use ($validated, $cleanNop, $village, $taxYear) {
+            // 1. Resolve Taxpayer
+            if ($validated['taxpayer_mode'] === 'new') {
+                $taxpayer = Taxpayer::create([
+                    'name' => $validated['new_taxpayer_name'],
+                    'nik' => $validated['new_taxpayer_nik'] ?? null,
+                    'phone' => $validated['new_taxpayer_phone'] ?? null,
+                    'address' => $validated['new_taxpayer_address'] ?? null,
+                    'rt' => $validated['new_taxpayer_rt'] ?? null,
+                    'rw' => $validated['new_taxpayer_rw'] ?? null,
+                ]);
+            } else {
+                $taxpayer = Taxpayer::findOrFail($validated['taxpayer_id']);
+            }
+
+            // 2. Resolve TaxObject
+            $taxObject = TaxObject::firstOrCreate(
+                ['nop' => $cleanNop],
+                [
+                    'taxpayer_id' => $taxpayer->id,
+                    'address' => $validated['object_address'] ?? null,
+                    'rt' => $validated['object_rt'] ?? null,
+                    'rw' => $validated['object_rw'] ?? null,
+                    'dusun' => $validated['object_dusun'] ?? null,
+                    'status' => 'normal',
+                ]
+            );
+
+            if ($taxObject->taxpayer_id !== $taxpayer->id) {
+                $taxObject->update(['taxpayer_id' => $taxpayer->id]);
+            }
+
+            // 3. Components
+            $componentsData = [
+                'bumi' => [
+                    'area' => (float)($validated['bumi_area_m2'] ?? 0),
+                    'class' => $validated['bumi_class_code'] ?? null,
+                    'njop_m2' => (float)($validated['bumi_njop_per_m2'] ?? 0),
+                ],
+                'bangunan' => [
+                    'area' => (float)($validated['bangunan_area_m2'] ?? 0),
+                    'class' => $validated['bangunan_class_code'] ?? null,
+                    'njop_m2' => (float)($validated['bangunan_njop_per_m2'] ?? 0),
+                ],
+                'bumi_bersama' => [
+                    'area' => (float)($validated['bumi_bersama_area_m2'] ?? 0),
+                    'class' => $validated['bumi_bersama_class_code'] ?? null,
+                    'njop_m2' => (float)($validated['bumi_bersama_njop_per_m2'] ?? 0),
+                ],
+                'bangunan_bersama' => [
+                    'area' => (float)($validated['bangunan_bersama_area_m2'] ?? 0),
+                    'class' => $validated['bangunan_bersama_class_code'] ?? null,
+                    'njop_m2' => (float)($validated['bangunan_bersama_njop_per_m2'] ?? 0),
+                ],
+            ];
+
+            $totalNjopDasar = 0;
+            foreach ($componentsData as $type => $comp) {
+                $totalNjopComp = $comp['area'] * $comp['njop_m2'];
+                $totalNjopDasar += $totalNjopComp;
+
+                TaxObjectComponent::updateOrCreate(
+                    [
+                        'tax_object_id' => $taxObject->id,
+                        'type' => $type,
+                        'tax_year' => $taxYear,
+                    ],
+                    [
+                        'area_m2' => $comp['area'],
+                        'class_code' => $comp['class'],
+                        'njop_per_m2' => $comp['njop_m2'],
+                        'total_njop' => $totalNjopComp,
+                    ]
+                );
+            }
+
+            // 4. Calculate SPPT
+            $njoptkp = isset($validated['njoptkp']) && $validated['njoptkp'] !== null ? (float)$validated['njoptkp'] : 10000000;
+            $njopPerhitungan = max(0, $totalNjopDasar - $njoptkp);
+            $tarifPercent = (float)($village->tax_rate_percent ?? 0.100);
+            $pbbTerutang = round($njopPerhitungan * ($tarifPercent / 100));
+
+            $sppt = Sppt::updateOrCreate(
+                [
+                    'tax_object_id' => $taxObject->id,
+                    'tax_year' => $taxYear,
+                ],
+                [
+                    'due_date' => $validated['due_date'] ?? "{$taxYear}-09-30",
+                    'njop_dasar' => $totalNjopDasar,
+                    'njoptkp' => $njoptkp,
+                    'njop_perhitungan' => $njopPerhitungan,
+                    'tarif_percent' => $tarifPercent,
+                    'pbb_terutang' => $pbbTerutang,
+                    'total_bill' => $pbbTerutang,
+                    'status' => 'unpaid',
+                ]
+            );
+
+            AuditLog::log('create', "Perekaman SPPT Terpadu NOP {$taxObject->formatted_nop} Tahun {$taxYear} sebesar Rp " . number_format($pbbTerutang, 0, ',', '.'), $sppt);
+
+            return $sppt;
+        });
+
+        return redirect()->route('sppts.index', ['year' => $sppt->tax_year])
+            ->with('success', "Perekaman SPPT Terpadu NOP {$sppt->taxObject->formatted_nop} berhasil disimpan! Tagihan terhitung: Rp " . number_format($sppt->total_bill, 0, ',', '.'));
     }
 }

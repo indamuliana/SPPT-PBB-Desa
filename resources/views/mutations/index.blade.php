@@ -10,11 +10,16 @@
             <h1 class="text-2xl font-bold text-slate-800">Mutasi & Balik Nama Objek Pajak</h1>
             <p class="text-sm text-slate-600 mt-1">Pengalihan kepemilikan subjek pajak, pemecahan, dan perbaikan data NOP dengan persetujuan Admin Desa</p>
         </div>
-        <div>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('mutations.split-component') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                <span>Pecah Komponen Objek</span>
+            </a>
             <a href="{{ route('mutations.create') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>Ajukan Mutasi Baru</span>
+                <span>Ajukan Balik Nama</span>
             </a>
         </div>
     </div>

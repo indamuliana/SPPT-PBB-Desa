@@ -9,7 +9,9 @@
     <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full antialiased font-sans text-slate-800" x-data="{ sidebarOpen: false }">
+<body class="h-full antialiased font-sans text-slate-800" 
+      x-data="{ sidebarOpen: false, sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true' }"
+      x-init="$watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))">
     <div class="min-h-full flex flex-col md:flex-row">
         <!-- Mobile Sidebar Backdrop -->
         <div x-show="sidebarOpen" 
@@ -24,8 +26,11 @@
              style="display: none;"></div>
 
         <!-- Sidebar Navigation -->
-        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-               class="fixed inset-y-0 left-0 z-50 w-72 bg-emerald-950 text-white flex flex-col transition-transform duration-300 ease-in-out md:static md:translate-x-0">
+        <aside :class="[
+                   sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+                   sidebarCollapsed ? 'md:hidden' : 'md:flex'
+               ]"
+               class="fixed inset-y-0 left-0 z-50 w-72 bg-emerald-950 text-white flex-col transition-all duration-300 ease-in-out md:static md:translate-x-0 shrink-0">
             <!-- App Brand & Village -->
             <div class="p-5 border-b border-emerald-900/80 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
@@ -179,6 +184,14 @@
                     <div class="flex items-center gap-3">
                         <button @click="sidebarOpen = true" class="md:hidden text-slate-600 hover:text-slate-900 p-1.5 rounded-lg border border-slate-200">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+
+                        <!-- Desktop Sidebar Toggle -->
+                        <button @click="sidebarCollapsed = !sidebarCollapsed" 
+                                type="button" 
+                                class="hidden md:inline-flex items-center justify-center p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition" 
+                                title="Sembunyikan / Tampilkan Sidebar">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
                         </button>
                         <div>
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">

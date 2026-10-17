@@ -48,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/handovers', [\App\Http\Controllers\CashHandoverController::class, 'store'])->name('handovers.store');
     Route::get('/handovers/{handover}', [\App\Http\Controllers\CashHandoverController::class, 'show'])->name('handovers.show');
     Route::post('/handovers/{handover}/receive', [\App\Http\Controllers\CashHandoverController::class, 'receive'])->name('handovers.receive');
+    Route::post('/handovers/bulk-receive', [\App\Http\Controllers\CashHandoverController::class, 'bulkReceive'])->name('handovers.bulk-receive');
 
     // Modul Setoran Bank / Bapenda (Kolektor -> Bank)
     Route::get('/deposits', [\App\Http\Controllers\BankDepositController::class, 'index'])->name('deposits.index');
@@ -70,6 +71,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/mutations', [\App\Http\Controllers\SpptMutationController::class, 'index'])->name('mutations.index');
     Route::get('/mutations/create', [\App\Http\Controllers\SpptMutationController::class, 'create'])->name('mutations.create');
     Route::post('/mutations', [\App\Http\Controllers\SpptMutationController::class, 'store'])->name('mutations.store');
+    Route::get('/mutations/split-component', [\App\Http\Controllers\SpptMutationController::class, 'createSplitComponent'])->name('mutations.split-component');
+    Route::post('/mutations/split-component', [\App\Http\Controllers\SpptMutationController::class, 'storeSplitComponent'])->name('mutations.store-split-component');
     Route::get('/mutations/{mutation}', [\App\Http\Controllers\SpptMutationController::class, 'show'])->name('mutations.show');
     Route::post('/mutations/{mutation}/approve', [\App\Http\Controllers\SpptMutationController::class, 'approve'])->name('mutations.approve')->middleware('role:admin');
     Route::post('/mutations/{mutation}/reject', [\App\Http\Controllers\SpptMutationController::class, 'reject'])->name('mutations.reject')->middleware('role:admin');
@@ -109,6 +112,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/sppts/create', [\App\Http\Controllers\SpptController::class, 'create'])->name('sppts.create');
         Route::post('/sppts', [\App\Http\Controllers\SpptController::class, 'store'])->name('sppts.store');
+        Route::get('/sppts/create-unified', [\App\Http\Controllers\SpptController::class, 'createUnified'])->name('sppts.create-unified');
+        Route::post('/sppts/create-unified', [\App\Http\Controllers\SpptController::class, 'storeUnified'])->name('sppts.store-unified');
         Route::get('/sppts/import', [\App\Http\Controllers\SpptController::class, 'importView'])->name('sppts.import.view');
         Route::post('/sppts/import', [\App\Http\Controllers\SpptController::class, 'importProcess'])->name('sppts.import.process');
     });

@@ -148,13 +148,14 @@ class AuthAndRoleTest extends TestCase
             'kades_nip' => '197508152006041008',
             'active_tax_year' => 2026,
             'target_amount' => 200000000,
-            'bank_account_info' => 'Bank BJB Rek. 12345',
+            'tax_rate_percent' => 0.100,
         ]);
 
         $response->assertRedirect(route('settings.village'));
         $this->assertDatabaseHas('villages', [
             'name' => 'Desa Sukahaji Maju',
             'target_amount' => 200000000,
+            'tax_rate_percent' => 0.100,
         ]);
 
         // Audit log created

@@ -20,12 +20,13 @@ class Village extends Model
         'kades_nip',
         'active_tax_year',
         'target_amount',
-        'bank_account_info',
+        'tax_rate_percent',
     ];
 
     protected $casts = [
         'active_tax_year' => 'integer',
         'target_amount' => 'decimal:2',
+        'tax_rate_percent' => 'decimal:3',
     ];
 
     /**
@@ -40,6 +41,7 @@ class Village extends Model
             'province' => 'Jawa Barat',
             'active_tax_year' => 2026,
             'target_amount' => 150000000,
+            'tax_rate_percent' => 0.100,
         ]);
     }
 }

@@ -68,12 +68,12 @@
                 </div>
             </div>
 
-            <!-- Section 3: Parameter PBB & Rekening Setoran -->
+            <!-- Section 3: Parameter PBB & Tarif Ketetapan -->
             <div>
                 <h2 class="text-xs font-bold uppercase tracking-wider text-emerald-800 border-b border-emerald-100 pb-2 mb-4">
-                    3. Parameter PBB-P2 & Rekening Resmi
+                    3. Parameter PBB-P2 & Tarif Ketetapan
                 </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Tahun Pajak Aktif <span class="text-rose-500">*</span></label>
                         <input type="number" name="active_tax_year" value="{{ old('active_tax_year', $village->active_tax_year) }}" min="2020" max="2099" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-700">
@@ -84,9 +84,10 @@
                         <input type="number" step="0.01" name="target_amount" value="{{ old('target_amount', $village->target_amount) }}" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-900">
                         <p class="text-[11px] text-slate-400 mt-1">Target baku total ketetapan DHKP desa tahun berjalan.</p>
                     </div>
-                    <div class="sm:col-span-2">
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">Informasi Rekening / Tujuan Setoran Kas</label>
-                        <input type="text" name="bank_account_info" value="{{ old('bank_account_info', $village->bank_account_info) }}" placeholder="Contoh: Bank BJB No. Rek 0012345678901 a/n Kas Desa Sukahaji (PBB)" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tarif Pajak PBB-P2 (%) <span class="text-rose-500">*</span></label>
+                        <input type="number" step="0.001" min="0.001" max="100" name="tax_rate_percent" value="{{ old('tax_rate_percent', $village->tax_rate_percent ?? '0.100') }}" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-emerald-600">
+                        <p class="text-[11px] text-slate-400 mt-1">Tarif resmi SPPT (standar 0.100% atau 0.1%).</p>
                     </div>
                 </div>
             </div>

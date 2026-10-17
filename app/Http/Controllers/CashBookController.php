@@ -75,8 +75,54 @@ class CashBookController extends Controller
             'collectors_held' => $cashHeldByCollectors,
             'bank_deposited' => $totalBankDeposited,
             'total_difference' => $totalDifference,
+            'current_village_cash' => $cashHeldByCashiers + $cashInTransit + $cashHeldByCollectors,
         ];
 
-        return view('cashbook.index', compact('village', 'summary', 'cashiers', 'collectors'));
+        // Jurnal Kas Kronologis (Buku Kas Umum)
+        $payments = Payment::where('status', 'valid')
+            ->with(['sppt.taxObject', 'cashier'])
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'datetime' => $p->payment_date,
+                    'ref' => $p->receipt_number,
+                    'type' => 'in',
+                    'type_label' => 'Uang Masuk',
+                    'party' => $p->payer_name,
+                    'description' => 'Penerimaan PBB NOP ' . ($p->sppt?->taxObject?->formatted_nop ?? '-') . ' (' . ($p->cashier->name ?? 'Kasir') . ')',
+                    'amount_in' => (float)$p->total_amount,
+                    'amount_out' => 0.0,
+                ];
+            });
+
+        $deposits = BankDeposit::where('status', 'approved')
+            ->with(['collector'])
+            ->get()
+            ->map(function ($d) {
+                return [
+                    'datetime' => $d->approved_at ?? ($d->created_at ?? \Illuminate\Support\Carbon::parse($d->deposit_date)->endOfDay()),
+                    'ref' => $d->deposit_number,
+                    'type' => 'out',
+                    'type_label' => 'Uang Keluar',
+                    'party' => $d->destination_bank ?? 'Bank BJB',
+                    'description' => 'Setoran Kas PBB ke Bank (' . ($d->bank_ref_number ? "No. Bukti: {$d->bank_ref_number}, " : '') . 'Kolektor: ' . ($d->collector->name ?? '-') . ')',
+                    'amount_in' => 0.0,
+                    'amount_out' => (float)$d->deposit_amount,
+                ];
+            });
+
+        $running = 0.0;
+        $ledger = $payments->concat($deposits)
+            ->sortBy('datetime')
+            ->values()
+            ->map(function ($item) use (&$running) {
+                $running += $item['amount_in'] - $item['amount_out'];
+                $item['running_balance'] = $running;
+                return $item;
+            })
+            ->reverse()
+            ->values();
+
+        return view('cashbook.index', compact('village', 'summary', 'cashiers', 'collectors', 'ledger'));
     }
 }

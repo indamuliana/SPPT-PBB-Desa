@@ -8,14 +8,18 @@
             <p class="text-xs sm:text-sm text-slate-500 mt-1">Data ketetapan resmi tagihan PBB-P2 dari Bapenda per tahun pajak di {{ \App\Models\Village::current()->name }}.</p>
         </div>
         @if(auth()->user()->isAdmin())
-        <div class="flex items-center gap-2 self-start sm:self-auto">
+        <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <a href="{{ route('sppts.create-unified') }}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Perekaman Terpadu (Single-Page)</span>
+            </a>
             <a href="{{ route('sppts.import.view') }}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs shadow-md shadow-teal-600/20 transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                <span>Import DHKP (Excel/CSV)</span>
+                <span>Import DHKP</span>
             </a>
-            <a href="{{ route('sppts.create') }}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-md shadow-emerald-600/20 transition">
+            <a href="{{ route('sppts.create') }}" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                <span>Tambah SPPT Manual</span>
+                <span>Manual</span>
             </a>
         </div>
         @endif

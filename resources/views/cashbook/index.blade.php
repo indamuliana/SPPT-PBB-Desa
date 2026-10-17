@@ -146,6 +146,90 @@
         </div>
     </div>
 
+    <!-- Section: Buku Kas Umum (Jurnal Arus Kas & Saldo Berjalan) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50/70">
+            <div>
+                <h2 class="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Buku Kas Umum: Jurnal Arus Kas &amp; Saldo Berjalan</span>
+                </h2>
+                <p class="text-xs text-slate-500 mt-0.5">Catatan kronologis penerimaan tunai dari WP (+) dan penyetoran ke kas daerah / bank (-).</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+                <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-semibold font-mono">
+                    Saldo Kas Desa: Rp {{ number_format($summary['current_village_cash'], 0, ',', '.') }}
+                </span>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                        <th class="py-2.5 px-3 w-12 text-center">No</th>
+                        <th class="py-2.5 px-3 w-32">Waktu / Tanggal</th>
+                        <th class="py-2.5 px-3 w-36">No. Referensi</th>
+                        <th class="py-2.5 px-3">Uraian Transaksi</th>
+                        <th class="py-2.5 px-3 w-36">Pihak Terkait</th>
+                        <th class="py-2.5 px-3 w-32 text-right">Uang Masuk (+ Rp)</th>
+                        <th class="py-2.5 px-3 w-32 text-right">Uang Keluar (- Rp)</th>
+                        <th class="py-2.5 px-3 w-36 text-right">Saldo Kas (Rp)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium">
+                    @forelse($ledger as $idx => $entry)
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-2.5 px-3 text-center text-slate-400 font-mono text-[11px]">{{ $idx + 1 }}</td>
+                        <td class="py-2.5 px-3 text-slate-600 whitespace-nowrap">
+                            {{ $entry['datetime']->format('d/m/Y H:i') }}
+                        </td>
+                        <td class="py-2.5 px-3 font-mono font-bold text-slate-800 text-[11px]">
+                            {{ $entry['ref'] }}
+                        </td>
+                        <td class="py-2.5 px-3 text-slate-700 leading-relaxed">
+                            {{ $entry['description'] }}
+                        </td>
+                        <td class="py-2.5 px-3 text-slate-600 font-medium truncate max-w-[140px]">
+                            {{ $entry['party'] }}
+                        </td>
+                        <td class="py-2.5 px-3 text-right font-mono font-bold text-emerald-700">
+                            {{ $entry['amount_in'] > 0 ? '+ ' . number_format($entry['amount_in'], 0, ',', '.') : '-' }}
+                        </td>
+                        <td class="py-2.5 px-3 text-right font-mono font-bold text-rose-600">
+                            {{ $entry['amount_out'] > 0 ? '- ' . number_format($entry['amount_out'], 0, ',', '.') : '-' }}
+                        </td>
+                        <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 bg-slate-50/50">
+                            Rp {{ number_format($entry['running_balance'], 0, ',', '.') }}
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8" class="py-8 text-center text-slate-400">
+                            Belum ada catatan mutasi arus kas penerimaan atau setoran bank.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+                <tfoot class="bg-slate-100 border-t-2 border-slate-300 font-bold text-slate-800">
+                    <tr>
+                        <td colspan="5" class="py-3 px-3 text-right uppercase text-[11px] tracking-wide">
+                            Total Arus Kas Kumulatif:
+                        </td>
+                        <td class="py-3 px-3 text-right font-mono text-emerald-800">
+                            + Rp {{ number_format($summary['total_payments'], 0, ',', '.') }}
+                        </td>
+                        <td class="py-3 px-3 text-right font-mono text-rose-700">
+                            - Rp {{ number_format($summary['bank_deposited'], 0, ',', '.') }}
+                        </td>
+                        <td class="py-3 px-3 text-right font-mono text-emerald-900 text-sm">
+                            Rp {{ number_format($summary['current_village_cash'], 0, ',', '.') }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
     <!-- Section Tables: Saldo Per Petugas -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Kasir Breakdown -->

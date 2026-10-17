@@ -145,4 +145,48 @@ class CashHandoverController extends Controller
 
         return back()->with('success', "Serah terima #{$handover->handover_number} telah dikonfirmasi diterima. Saldo kas kolektor bertambah Rp " . number_format($handover->physical_amount, 0, ',', '.'));
     }
+
+    public function bulkReceive(Request $request): RedirectResponse
+    {
+        $user = auth()->user();
+
+        if (! $user->isKolektor() && ! $user->isAdmin()) {
+            abort(403, 'Hanya Kolektor atau Admin yang berwenang mengonfirmasi penerimaan fisik kas.');
+        }
+
+        $validated = $request->validate([
+            'handover_ids' => ['required', 'array', 'min:1'],
+            'handover_ids.*' => ['exists:cash_handovers,id'],
+        ]);
+
+        $result = DB::transaction(function () use ($validated, $user) {
+            $handovers = CashHandover::whereIn('id', $validated['handover_ids'])
+                ->where('status', 'submitted')
+                ->lockForUpdate()
+                ->get();
+
+            $totalPhysical = 0.0;
+            foreach ($handovers as $h) {
+                $h->update([
+                    'status' => 'received',
+                    'received_at' => now(),
+                ]);
+                $totalPhysical += (float)$h->physical_amount;
+
+                AuditLog::log(
+                    'handover',
+                    "Kolektor {$user->name} mengonfirmasi massal penerimaan serah terima #{$h->handover_number} sebesar Rp " . number_format($h->physical_amount, 0, ',', '.'),
+                    $h
+                );
+            }
+
+            return ['count' => $handovers->count(), 'total' => $totalPhysical];
+        });
+
+        if ($result['count'] === 0) {
+            return back()->with('error', 'Tidak ada data serah terima berstatus menunggu yang dapat dikonfirmasi.');
+        }
+
+        return back()->with('success', "Berhasil mengonfirmasi massal {$result['count']} serah terima kas senilai total Rp " . number_format($result['total'], 0, ',', '.') . ".");
+    }
 }

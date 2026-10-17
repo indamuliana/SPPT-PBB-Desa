@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Sppt;
 use App\Models\SpptMutation;
 use App\Models\TaxObject;
+use App\Models\TaxObjectComponent;
 use App\Models\Taxpayer;
 use App\Models\ToCase;
 use App\Models\Village;
@@ -114,9 +115,69 @@ class SpptMutationController extends Controller
         return redirect()->route('mutations.show', $mutation)->with('success', 'Pengajuan mutasi berhasil didaftarkan dan menunggu pengesahan Administrator Desa.');
     }
 
+    public function createSplitComponent(Request $request): View
+    {
+        $taxObjectId = $request->query('tax_object_id');
+        $selectedObject = $taxObjectId ? TaxObject::with(['taxpayer', 'components'])->find($taxObjectId) : null;
+        $taxObjects = TaxObject::with(['taxpayer', 'components'])->orderBy('nop')->get();
+        $taxpayers = Taxpayer::orderBy('name')->get();
+
+        return view('mutations.split-component', compact('selectedObject', 'taxObjects', 'taxpayers'));
+    }
+
+    public function storeSplitComponent(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'tax_object_id' => ['required', 'exists:tax_objects,id'],
+            'split_component_type' => ['required', 'in:bumi,bangunan,bumi_bersama,bangunan_bersama'],
+            'split_area_m2' => ['required', 'numeric', 'min:0.01'],
+            'new_taxpayer_id' => ['required', 'exists:taxpayers,id'],
+            'target_tax_object_id' => ['nullable', 'exists:tax_objects,id'],
+            'legal_doc_type' => ['required', 'string', 'max:100'],
+            'legal_doc_number' => ['nullable', 'string', 'max:100'],
+            'reason' => ['required', 'string'],
+        ]);
+
+        $taxObject = TaxObject::with(['taxpayer', 'components'])->findOrFail($validated['tax_object_id']);
+
+        $component = $taxObject->components->where('type', $validated['split_component_type'])->first();
+        if (! $component) {
+            return back()->withInput()->with('error', "Komponen objek " . strtoupper(str_replace('_', ' ', $validated['split_component_type'])) . " tidak ditemukan pada NOP ini.");
+        }
+
+        if ((float)$validated['split_area_m2'] > (float)$component->area_m2) {
+            return back()->withInput()->with('error', "Luas yang dialihkan ({$validated['split_area_m2']} m²) tidak boleh melebihi luas komponen saat ini ({$component->area_m2} m²).");
+        }
+
+        $mutation = SpptMutation::create([
+            'mutation_number' => SpptMutation::generateMutationNumber(),
+            'tax_object_id' => $taxObject->id,
+            'mutation_type' => 'pemecahan',
+            'split_component_type' => $validated['split_component_type'],
+            'split_area_m2' => $validated['split_area_m2'],
+            'split_njop_per_m2' => $component->njop_per_m2,
+            'old_taxpayer_id' => $taxObject->taxpayer_id,
+            'new_taxpayer_id' => $validated['new_taxpayer_id'],
+            'target_tax_object_id' => $validated['target_tax_object_id'] ?? null,
+            'requested_by_user_id' => auth()->id(),
+            'legal_doc_type' => $validated['legal_doc_type'],
+            'legal_doc_number' => $validated['legal_doc_number'] ?? null,
+            'reason' => $validated['reason'],
+            'status' => 'pending',
+        ]);
+
+        AuditLog::log(
+            'mutation',
+            "Pengajuan pecah komponen {$validated['split_component_type']} ({$validated['split_area_m2']} m²) #{$mutation->mutation_number} untuk NOP {$taxObject->formatted_nop}",
+            $mutation
+        );
+
+        return redirect()->route('mutations.show', $mutation)->with('success', 'Pengajuan pemecahan komponen berhasil dibuat dan menunggu persetujuan Administrator Desa.');
+    }
+
     public function show(SpptMutation $mutation): View
     {
-        $mutation->load(['taxObject.components', 'oldTaxpayer', 'newTaxpayer', 'requestedBy', 'approvedBy', 'toCase']);
+        $mutation->load(['taxObject.components', 'targetTaxObject.components', 'oldTaxpayer', 'newTaxpayer', 'requestedBy', 'approvedBy', 'toCase']);
         $village = Village::current();
 
         return view('mutations.show', compact('mutation', 'village'));
@@ -133,7 +194,7 @@ class SpptMutationController extends Controller
         }
 
         DB::transaction(function () use ($mutation) {
-            $mutation->load(['taxObject', 'newTaxpayer']);
+            $mutation->load(['taxObject.components', 'newTaxpayer']);
             $taxObject = $mutation->taxObject;
 
             // 1. Update mutation record
@@ -143,11 +204,87 @@ class SpptMutationController extends Controller
                 'approved_at' => now(),
             ]);
 
-            // 2. Transfer ownership in TaxObject
-            $taxObject->update([
-                'taxpayer_id' => $mutation->new_taxpayer_id,
-                'status' => 'normal',
-            ]);
+            $village = Village::current();
+            $activeYear = $village->active_tax_year;
+
+            // 2. Handle component splitting vs full transfer
+            if ($mutation->mutation_type === 'pemecahan' && $mutation->split_component_type) {
+                // Find source component
+                $sourceComp = TaxObjectComponent::where('tax_object_id', $taxObject->id)
+                    ->where('type', $mutation->split_component_type)
+                    ->first();
+
+                if ($sourceComp) {
+                    $newArea = max(0, (float)$sourceComp->area_m2 - (float)$mutation->split_area_m2);
+                    $sourceComp->update([
+                        'area_m2' => $newArea,
+                        'total_njop' => $newArea * (float)$sourceComp->njop_per_m2,
+                    ]);
+                }
+
+                // Target Object
+                $targetObject = $mutation->target_tax_object_id 
+                    ? TaxObject::find($mutation->target_tax_object_id) 
+                    : null;
+
+                if (! $targetObject) {
+                    $targetNop = TaxObject::generateChildNop($taxObject->nop);
+                    $targetObject = TaxObject::create([
+                        'nop' => $targetNop,
+                        'taxpayer_id' => $mutation->new_taxpayer_id,
+                        'address' => $taxObject->address,
+                        'rt' => $taxObject->rt,
+                        'rw' => $taxObject->rw,
+                        'dusun' => $taxObject->dusun,
+                        'status' => 'normal',
+                    ]);
+                    $mutation->update(['target_tax_object_id' => $targetObject->id]);
+                }
+
+                // Add or update component on target
+                TaxObjectComponent::updateOrCreate(
+                    [
+                        'tax_object_id' => $targetObject->id,
+                        'type' => $mutation->split_component_type,
+                        'tax_year' => $sourceComp ? $sourceComp->tax_year : $activeYear,
+                    ],
+                    [
+                        'area_m2' => $mutation->split_area_m2,
+                        'class_code' => $sourceComp ? $sourceComp->class_code : 'A35',
+                        'njop_per_m2' => $mutation->split_njop_per_m2 ?? ($sourceComp ? $sourceComp->njop_per_m2 : 0),
+                        'total_njop' => (float)$mutation->split_area_m2 * (float)($mutation->split_njop_per_m2 ?? ($sourceComp ? $sourceComp->njop_per_m2 : 0)),
+                    ]
+                );
+
+                // Recalculate SPPT for both objects
+                foreach ([$taxObject, $targetObject] as $obj) {
+                    $totalNjopObj = (float)TaxObjectComponent::where('tax_object_id', $obj->id)->sum('total_njop');
+                    $njoptkp = 10000000;
+                    $njopPerhitungan = max(0, $totalNjopObj - $njoptkp);
+                    $tarif = (float)($village->tax_rate_percent ?? 0.1);
+                    $pbb = round($njopPerhitungan * ($tarif / 100));
+
+                    Sppt::updateOrCreate(
+                        ['tax_object_id' => $obj->id, 'tax_year' => $activeYear],
+                        [
+                            'due_date' => "{$activeYear}-09-30",
+                            'njop_dasar' => $totalNjopObj,
+                            'njoptkp' => $njoptkp,
+                            'njop_perhitungan' => $njopPerhitungan,
+                            'tarif_percent' => $tarif,
+                            'pbb_terutang' => $pbb,
+                            'total_bill' => $pbb,
+                            'status' => 'unpaid',
+                        ]
+                    );
+                }
+            } else {
+                // Full Balik Nama
+                $taxObject->update([
+                    'taxpayer_id' => $mutation->new_taxpayer_id,
+                    'status' => 'normal',
+                ]);
+            }
 
             // 3. Unblock all SPPTs under this Tax Object that were TO-blocked
             $sppts = Sppt::where('tax_object_id', $taxObject->id)->get();
@@ -170,12 +307,12 @@ class SpptMutationController extends Controller
 
             AuditLog::log(
                 'mutation',
-                "Admin mengesahkan mutasi #{$mutation->mutation_number}: NOP {$taxObject->formatted_nop} dialihkan ke {$mutation->newTaxpayer->name}",
+                "Admin mengesahkan mutasi {$mutation->mutation_type} #{$mutation->mutation_number}: NOP {$taxObject->formatted_nop}",
                 $mutation
             );
         });
 
-        return back()->with('success', "Mutasi #{$mutation->mutation_number} berhasil disahkan! Pemilik NOP telah diperbarui dan SPPT aktif kembali untuk pembayaran.");
+        return back()->with('success', "Mutasi #{$mutation->mutation_number} berhasil disahkan! Objek pajak dan ketetapan SPPT telah diperbarui.");
     }
 
     public function reject(SpptMutation $mutation, Request $request): RedirectResponse

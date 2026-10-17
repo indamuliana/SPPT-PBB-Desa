@@ -85,4 +85,18 @@ class TaxObject extends Model
 
         return ! empty($parts) ? implode(', ', $parts) : '-';
     }
+
+    public static function generateChildNop(string $baseNop): string
+    {
+        $clean = preg_replace('/[^0-9]/', '', $baseNop);
+        $prefix = strlen($clean) >= 14 ? substr($clean, 0, 14) : str_pad($clean, 14, '0');
+        $suffix = strlen($clean) > 14 ? (int)substr($clean, 14) : 1000;
+
+        do {
+            $suffix++;
+            $candidate = $prefix . str_pad((string)($suffix % 10000), 4, '0', STR_PAD_LEFT);
+        } while (static::where('nop', $candidate)->exists());
+
+        return $candidate;
+    }
 }

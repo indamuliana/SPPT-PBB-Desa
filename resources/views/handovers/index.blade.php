@@ -3,16 +3,26 @@
 @section('title', 'Serah Terima Kas - SADAYA PBB')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6" x-data="{
+    selectedIds: [],
+    allPendingIds: {{ Js::from($handovers->where('status', 'submitted')->pluck('id')) }},
+    toggleAll() {
+        if (this.selectedIds.length === this.allPendingIds.length) {
+            this.selectedIds = [];
+        } else {
+            this.selectedIds = [...this.allPendingIds];
+        }
+    }
+}">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">Serah Terima Kas</h1>
             <p class="text-sm text-slate-600 mt-1">Pengalihan tanggung jawab kas penerimaan PBB dari Kasir/Kadus kepada Kolektor Desa</p>
         </div>
-        <div>
+        <div class="flex items-center gap-2">
             <a href="{{ route('handovers.create') }}" 
-               class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-sm transition">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Buat Serah Terima Kas</span>
             </a>
@@ -21,25 +31,68 @@
 
     <!-- Alert Messages -->
     @if(session('success'))
-    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg flex items-center gap-3">
+    <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-3">
         <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span class="text-sm font-medium">{{ session('success') }}</span>
     </div>
     @endif
 
     @if(session('error'))
-    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg flex items-center gap-3">
+    <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center gap-3">
         <svg class="w-5 h-5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <span class="text-sm font-medium">{{ session('error') }}</span>
     </div>
     @endif
 
+    <!-- Bulk Confirmation Action Bar (Visible when Kolektor/Admin has selected pending handovers) -->
+    @if(auth()->user()->isKolektor() || auth()->user()->isAdmin())
+    <div x-show="selectedIds.length > 0" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 -translate-y-2"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="p-4 bg-emerald-900 text-white rounded-2xl shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4"
+         style="display: none;">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center font-bold text-sm" x-text="selectedIds.length">
+                0
+            </span>
+            <div>
+                <p class="text-sm font-bold">Serah Terima Terpilih</p>
+                <p class="text-xs text-emerald-300">Siap dikonfirmasi penerimaan fisik uang kas sekaligus.</p>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ route('handovers.bulk-receive') }}" class="flex items-center gap-2 w-full sm:w-auto" onsubmit="return confirm('Apakah Anda yakin telah menerima fisik uang kas untuk seluruh serah terima yang dipilih?')">
+            @csrf
+            <template x-for="id in selectedIds" :key="id">
+                <input type="hidden" name="handover_ids[]" :value="id">
+            </template>
+            <button type="button" @click="selectedIds = []" class="px-4 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-xs font-semibold transition">
+                Batal Pilih
+            </button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-white text-emerald-950 hover:bg-emerald-100 text-xs font-bold shadow-md transition flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span>Konfirmasi Terima Fisik Terpilih (<span x-text="selectedIds.length"></span>)</span>
+            </button>
+        </form>
+    </div>
+    @endif
+
     <!-- Data Table -->
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm text-slate-700">
                 <thead class="bg-slate-50 text-slate-700 text-xs font-semibold uppercase border-b border-slate-200">
                     <tr>
+                        @if(auth()->user()->isKolektor() || auth()->user()->isAdmin())
+                        <th class="py-3 px-3 w-10 text-center">
+                            <input type="checkbox" 
+                                   @change="toggleAll()" 
+                                   :checked="allPendingIds.length > 0 && selectedIds.length === allPendingIds.length"
+                                   :disabled="allPendingIds.length === 0"
+                                   class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                        </th>
+                        @endif
                         <th class="py-3 px-4">No. Serah Terima</th>
                         <th class="py-3 px-4">Waktu</th>
                         <th class="py-3 px-4">Kasir / Penyerah</th>
@@ -54,7 +107,19 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200">
                     @forelse($handovers as $h)
-                    <tr class="hover:bg-slate-50 transition">
+                    <tr class="hover:bg-slate-50 transition {{ in_array($h->id, old('handover_ids', [])) ? 'bg-emerald-50/50' : '' }}">
+                        @if(auth()->user()->isKolektor() || auth()->user()->isAdmin())
+                        <td class="py-3 px-3 text-center">
+                            @if(!$h->isReceived())
+                            <input type="checkbox" 
+                                   :value="{{ $h->id }}" 
+                                   x-model="selectedIds"
+                                   class="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer">
+                            @else
+                            <span class="text-slate-300">&bull;</span>
+                            @endif
+                        </td>
+                        @endif
                         <td class="py-3 px-4 font-mono font-medium text-slate-900">
                             {{ $h->handover_number }}
                         </td>
@@ -102,7 +167,7 @@
                         </td>
                         <td class="py-3 px-4 text-center whitespace-nowrap">
                             <a href="{{ route('handovers.show', $h) }}" 
-                               class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium transition">
+                               class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition">
                                 <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 <span>Detail & BA</span>
                             </a>
@@ -110,7 +175,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" class="py-12 text-center text-slate-400">
+                        <td colspan="11" class="py-12 text-center text-slate-400">
                             <svg class="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                             <p class="font-medium text-slate-600">Belum ada riwayat serah terima kas</p>
                             <p class="text-xs text-slate-400 mt-1">Kasir dapat mengajukan serah terima dari transaksi pembayaran yang telah dicatat.</p>

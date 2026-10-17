@@ -102,10 +102,23 @@
                         <td class="py-2 px-3 font-semibold text-slate-600">Letak Lokasi Objek</td>
                         <td class="py-2 px-3 text-slate-800">{{ $mutation->taxObject->formatted_address }}</td>
                     </tr>
-                    <tr>
+                    <tr class="border-b border-slate-200">
                         <td class="py-2 px-3 font-semibold text-slate-600">Jenis Mutasi</td>
                         <td class="py-2 px-3 font-bold text-slate-900">{{ $mutation->type_label }}</td>
                     </tr>
+                    @if($mutation->split_component_type)
+                    <tr class="bg-teal-50/60 border-b border-slate-200">
+                        <td class="py-2 px-3 font-semibold text-teal-800">Rincian Komponen Dipecah</td>
+                        <td class="py-2 px-3 font-medium text-teal-900">
+                            Komponen: <strong class="uppercase">{{ str_replace('_', ' ', $mutation->split_component_type) }}</strong> &bull;
+                            Luas Dialihkan: <strong>{{ number_format($mutation->split_area_m2, 2) }} M²</strong> &bull;
+                            NJOP/M²: <strong>Rp {{ number_format($mutation->split_njop_per_m2, 0, ',', '.') }}</strong>
+                            @if($mutation->targetTaxObject)
+                                <div class="mt-1 text-slate-600 font-mono text-[11px]">NOP Tujuan: <strong>{{ $mutation->targetTaxObject->formatted_nop }}</strong></div>
+                            @endif
+                        </td>
+                    </tr>
+                    @endif
                 </table>
             </div>
 

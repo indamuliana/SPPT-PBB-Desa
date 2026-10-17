@@ -23,13 +23,55 @@ class PaymentController extends Controller
     {
         $village = Village::current();
         $search = $request->input('search');
+        $dusun = $request->input('dusun');
+        $statusFilter = $request->input('status', 'unpaid');
+
+        // 1. Table Query for left panel
+        $tableQuery = Sppt::with(['taxObject.taxpayer'])
+            ->where('tax_year', $village->active_tax_year);
+
+        if ($statusFilter === 'unpaid') {
+            $tableQuery->whereIn('status', ['unpaid', 'partial']);
+        } elseif ($statusFilter !== 'all') {
+            $tableQuery->where('status', $statusFilter);
+        }
+
+        if ($search) {
+            $cleanNop = preg_replace('/[^0-9]/', '', $search);
+            $tableQuery->where(function ($q) use ($search, $cleanNop) {
+                if (! empty($cleanNop)) {
+                    $q->whereHas('taxObject', function ($oq) use ($cleanNop) {
+                        $oq->where('nop', 'like', "%{$cleanNop}%");
+                    });
+                }
+                $q->orWhereHas('taxObject.taxpayer', function ($tq) use ($search) {
+                    $tq->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($dusun) {
+            $tableQuery->whereHas('taxObject', function ($oq) use ($dusun) {
+                $oq->where('dusun', $dusun);
+            });
+        }
+
+        $spptList = $tableQuery->orderBy('id', 'desc')->paginate(10)->withQueryString();
+        $dusunList = TaxObject::whereNotNull('dusun')->distinct()->pluck('dusun');
+
+        // 2. Selection for right panel
+        $selectedSppt = null;
         $taxObject = null;
         $unpaidSppts = collect();
         $paidHistory = collect();
 
-        if ($search) {
+        if ($request->filled('selected_sppt_id')) {
+            $selectedSppt = Sppt::with(['taxObject.taxpayer', 'payments.cashier'])->find($request->selected_sppt_id);
+            if ($selectedSppt) {
+                $taxObject = $selectedSppt->taxObject;
+            }
+        } elseif ($search) {
             $cleanNop = preg_replace('/[^0-9]/', '', $search);
-
             $taxObject = TaxObject::with(['taxpayer', 'sppts' => function ($q) {
                 $q->orderByDesc('tax_year');
             }])
@@ -44,16 +86,31 @@ class PaymentController extends Controller
             ->first();
 
             if ($taxObject) {
-                $unpaidSppts = $taxObject->sppts->where('status', '!=', 'paid');
-                $paidHistory = Payment::whereIn('sppt_id', $taxObject->sppts->pluck('id'))
-                    ->with('cashier')
-                    ->latest('payment_date')
-                    ->take(10)
-                    ->get();
+                $selectedSppt = $taxObject->sppts->where('status', '!=', 'paid')->first() ?? $taxObject->sppts->first();
             }
         }
 
-        return view('payments.pos', compact('village', 'search', 'taxObject', 'unpaidSppts', 'paidHistory'));
+        if ($taxObject) {
+            $unpaidSppts = $taxObject->sppts->where('status', '!=', 'paid');
+            $paidHistory = Payment::whereIn('sppt_id', $taxObject->sppts->pluck('id'))
+                ->with('cashier')
+                ->latest('payment_date')
+                ->take(10)
+                ->get();
+        }
+
+        return view('payments.pos', compact(
+            'village', 
+            'search', 
+            'dusun', 
+            'statusFilter', 
+            'spptList', 
+            'dusunList', 
+            'selectedSppt', 
+            'taxObject', 
+            'unpaidSppts', 
+            'paidHistory'
+        ));
     }
 
     /**

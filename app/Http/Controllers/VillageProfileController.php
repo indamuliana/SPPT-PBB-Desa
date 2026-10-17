@@ -33,6 +33,7 @@ class VillageProfileController extends Controller
             'kades_nip' => ['nullable', 'string', 'max:50'],
             'active_tax_year' => ['required', 'integer', 'min:2000', 'max:2099'],
             'target_amount' => ['required', 'numeric', 'min:0'],
+            'tax_rate_percent' => ['required', 'numeric', 'min:0.001', 'max:100'],
             'bank_account_info' => ['nullable', 'string'],
         ]);
 

@@ -15,8 +15,12 @@ class SpptMutation extends Model
         'tax_object_id',
         'to_case_id',
         'mutation_type',
+        'split_component_type',
+        'split_area_m2',
+        'split_njop_per_m2',
         'old_taxpayer_id',
         'new_taxpayer_id',
+        'target_tax_object_id',
         'requested_by_user_id',
         'approved_by_user_id',
         'legal_doc_type',
@@ -28,6 +32,8 @@ class SpptMutation extends Model
     ];
 
     protected $casts = [
+        'split_area_m2' => 'decimal:2',
+        'split_njop_per_m2' => 'decimal:2',
         'approved_at' => 'datetime',
     ];
 
@@ -60,6 +66,11 @@ class SpptMutation extends Model
     public function newTaxpayer(): BelongsTo
     {
         return $this->belongsTo(Taxpayer::class, 'new_taxpayer_id');
+    }
+
+    public function targetTaxObject(): BelongsTo
+    {
+        return $this->belongsTo(TaxObject::class, 'target_tax_object_id');
     }
 
     public function requestedBy(): BelongsTo
