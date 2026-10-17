@@ -121,6 +121,8 @@ class DhkpImportService
                         );
 
                         // 2. Tax Object (NOP)
+                        $dusunRecord = ! empty($dusun) ? \App\Models\Dusun::where('name', $dusun)->orWhere('code', $dusun)->first() : null;
+
                         $taxObject = TaxObject::updateOrCreate(
                             ['nop' => $cleanNop],
                             [
@@ -129,6 +131,7 @@ class DhkpImportService
                                 'rt' => $rt,
                                 'rw' => $rw,
                                 'dusun' => $dusun,
+                                'dusun_id' => $dusunRecord?->id,
                                 'status' => 'normal',
                             ]
                         );

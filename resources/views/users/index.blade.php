@@ -70,7 +70,7 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-slate-600">
-                            {{ $item->dusun_name ?? '-' }}
+                            {{ $item->assignedDusunNames() }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-slate-600">
                             <div>{{ $item->phone ?? '-' }}</div>

@@ -31,7 +31,24 @@ class DatabaseSeeder extends Seeder
             'bank_account_info' => 'Bank BJB Rek. 0012345678901 a/n Kas Desa Sukahaji (PBB-P2)',
         ]);
 
-        // 2. Inisialisasi Akun Pengguna untuk Setiap Peran
+        // 2. Inisialisasi Master Dusun
+        $dusun1 = \App\Models\Dusun::firstOrCreate(['name' => 'Dusun I Babakan'], [
+            'code' => 'DS-01',
+            'rw' => 'RW 01',
+            'description' => 'Wilayah Dusun I meliputi RW 01 (RT 01 s/d RT 05)',
+        ]);
+        $dusun2 = \App\Models\Dusun::firstOrCreate(['name' => 'Dusun II Sukajaya'], [
+            'code' => 'DS-02',
+            'rw' => 'RW 02',
+            'description' => 'Wilayah Dusun II meliputi RW 02',
+        ]);
+        $dusun3 = \App\Models\Dusun::firstOrCreate(['name' => 'Dusun III Mekarsari'], [
+            'code' => 'DS-03',
+            'rw' => 'RW 03',
+            'description' => 'Wilayah Dusun III meliputi RW 03',
+        ]);
+
+        // 3. Inisialisasi Akun Pengguna untuk Setiap Peran
         $users = [
             [
                 'name' => 'Administrator Desa',
@@ -86,13 +103,17 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($users as $user) {
-            User::updateOrCreate(
+            $createdUser = User::updateOrCreate(
                 ['username' => $user['username']],
                 $user
             );
+
+            if ($createdUser->username === 'kadus1') {
+                $createdUser->dusuns()->syncWithoutDetaching([$dusun1->id]);
+            }
         }
 
-        // 3. Inisialisasi Data Contoh Wajib Pajak, Objek Pajak (NOP), dan SPPT
+        // 4. Inisialisasi Data Contoh Wajib Pajak, Objek Pajak (NOP), dan SPPT
         $sampleData = [
             [
                 'wp_name' => 'H. Sukarna Wiraatmadja',
@@ -165,6 +186,8 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
+            $dusunRecord = \App\Models\Dusun::where('name', $item['dusun'])->first();
+
             $taxObject = \App\Models\TaxObject::firstOrCreate(
                 ['nop' => $item['nop']],
                 [
@@ -173,9 +196,14 @@ class DatabaseSeeder extends Seeder
                     'rt' => $item['rt'],
                     'rw' => $item['rw'],
                     'dusun' => $item['dusun'],
+                    'dusun_id' => $dusunRecord?->id,
                     'status' => $item['status'],
                 ]
             );
+
+            if ($dusunRecord && ! $taxObject->dusun_id) {
+                $taxObject->update(['dusun_id' => $dusunRecord->id]);
+            }
 
             \App\Models\Sppt::updateOrCreate(
                 [

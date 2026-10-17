@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\Dusun;
 use App\Models\Payment;
 use App\Models\PaymentCancellation;
 use App\Models\Sppt;
@@ -22,12 +23,21 @@ class PaymentController extends Controller
     public function pos(Request $request): View
     {
         $village = Village::current();
-        $search = $request->input('search');
+        $user = $request->user();
+        $isKadus = $user && $user->isKadus();
+        $assignedDusunIds = $isKadus ? $user->assignedDusunIds() : [];
+
+        // Default Kadus ke wilayah binaannya ("my") jika belum ada parameter dusun di URL
         $dusun = $request->input('dusun');
+        if ($isKadus && ! empty($assignedDusunIds) && ! $request->has('dusun')) {
+            $dusun = 'my';
+        }
+
+        $search = $request->input('search');
         $statusFilter = $request->input('status', 'unpaid');
 
         // 1. Table Query for left panel
-        $tableQuery = Sppt::with(['taxObject.taxpayer'])
+        $tableQuery = Sppt::with(['taxObject.taxpayer', 'taxObject.dusunRelation'])
             ->where('tax_year', $village->active_tax_year);
 
         if ($statusFilter === 'unpaid') {
@@ -50,14 +60,27 @@ class PaymentController extends Controller
             });
         }
 
-        if ($dusun) {
+        if ($dusun === 'my' && ! empty($assignedDusunIds)) {
+            $tableQuery->whereHas('taxObject', function ($oq) use ($assignedDusunIds) {
+                $oq->whereIn('dusun_id', $assignedDusunIds);
+            });
+        } elseif ($dusun && $dusun !== 'all') {
             $tableQuery->whereHas('taxObject', function ($oq) use ($dusun) {
-                $oq->where('dusun', $dusun);
+                if (is_numeric($dusun)) {
+                    $oq->where('dusun_id', $dusun);
+                } else {
+                    $oq->where(function ($sub) use ($dusun) {
+                        $sub->where('dusun', $dusun)
+                            ->orWhereHas('dusunRelation', function ($dq) use ($dusun) {
+                                $dq->where('name', $dusun);
+                            });
+                    });
+                }
             });
         }
 
         $spptList = $tableQuery->orderBy('id', 'desc')->paginate(10)->withQueryString();
-        $dusunList = TaxObject::whereNotNull('dusun')->distinct()->pluck('dusun');
+        $dusunList = Dusun::orderBy('name')->get();
 
         // 2. Selection for right panel
         $selectedSppt = null;
@@ -66,13 +89,13 @@ class PaymentController extends Controller
         $paidHistory = collect();
 
         if ($request->filled('selected_sppt_id')) {
-            $selectedSppt = Sppt::with(['taxObject.taxpayer', 'payments.cashier'])->find($request->selected_sppt_id);
+            $selectedSppt = Sppt::with(['taxObject.taxpayer', 'taxObject.dusunRelation', 'payments.cashier'])->find($request->selected_sppt_id);
             if ($selectedSppt) {
                 $taxObject = $selectedSppt->taxObject;
             }
         } elseif ($search) {
             $cleanNop = preg_replace('/[^0-9]/', '', $search);
-            $taxObject = TaxObject::with(['taxpayer', 'sppts' => function ($q) {
+            $taxObject = TaxObject::with(['taxpayer', 'dusunRelation', 'sppts' => function ($q) {
                 $q->orderByDesc('tax_year');
             }])
             ->where(function ($q) use ($search, $cleanNop) {
@@ -103,6 +126,8 @@ class PaymentController extends Controller
             'village', 
             'search', 
             'dusun', 
+            'isKadus',
+            'assignedDusunIds',
             'statusFilter', 
             'spptList', 
             'dusunList', 

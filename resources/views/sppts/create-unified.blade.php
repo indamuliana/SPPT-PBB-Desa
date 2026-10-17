@@ -112,8 +112,15 @@
                     <p class="text-[11px] text-slate-400 mt-1">Format resmi SPPT. Boleh diketik tanpa titik/strip (akan distandarisasi otomatis).</p>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Dusun / Blok Wilayah</label>
-                    <input type="text" name="object_dusun" value="{{ old('object_dusun') }}" placeholder="Dusun Sukamaju / Blok 1" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Dusun / Wilayah</label>
+                    <select name="object_dusun_id" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
+                        <option value="">-- Pilih Dusun --</option>
+                        @foreach($dusuns as $ds)
+                            <option value="{{ $ds->id }}" {{ old('object_dusun_id') == $ds->id ? 'selected' : '' }}>
+                                {{ $ds->name }} {{ $ds->code ? '(' . $ds->code . ')' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="sm:col-span-2">
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Alamat Letak Objek Pajak</label>

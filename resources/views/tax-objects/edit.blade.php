@@ -53,7 +53,14 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Wilayah Dusun</label>
-                    <input type="text" name="dusun" value="{{ old('dusun', $taxObject->dusun) }}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                    <select name="dusun_id" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
+                        <option value="">-- Pilih Dusun --</option>
+                        @foreach($dusuns as $ds)
+                            <option value="{{ $ds->id }}" {{ (string)old('dusun_id', $taxObject->dusun_id) === (string)$ds->id ? 'selected' : '' }}>
+                                {{ $ds->name }} {{ $ds->code ? '(' . $ds->code . ')' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
 

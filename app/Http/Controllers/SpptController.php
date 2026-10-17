@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\Dusun;
 use App\Models\Sppt;
 use App\Models\TaxObject;
 use App\Models\TaxObjectComponent;
@@ -146,10 +147,11 @@ class SpptController extends Controller
     {
         $village = Village::current();
         $taxpayers = Taxpayer::orderBy('name')->get();
+        $dusuns = Dusun::orderBy('name')->get();
         $defaultYear = $village->active_tax_year;
         $taxRate = (float)($village->tax_rate_percent ?? 0.100);
 
-        return view('sppts.create-unified', compact('village', 'taxpayers', 'defaultYear', 'taxRate'));
+        return view('sppts.create-unified', compact('village', 'taxpayers', 'dusuns', 'defaultYear', 'taxRate'));
     }
 
     public function storeUnified(Request $request): RedirectResponse
@@ -170,6 +172,7 @@ class SpptController extends Controller
             'object_address' => ['nullable', 'string'],
             'object_rt' => ['nullable', 'string', 'max:5'],
             'object_rw' => ['nullable', 'string', 'max:5'],
+            'object_dusun_id' => ['nullable', 'exists:dusuns,id'],
             'object_dusun' => ['nullable', 'string', 'max:50'],
 
             // 4 Components
@@ -219,6 +222,12 @@ class SpptController extends Controller
             }
 
             // 2. Resolve TaxObject
+            $dusunId = $validated['object_dusun_id'] ?? null;
+            $dusunName = $validated['object_dusun'] ?? null;
+            if ($dusunId && ! $dusunName) {
+                $dusunName = Dusun::find($dusunId)?->name;
+            }
+
             $taxObject = TaxObject::firstOrCreate(
                 ['nop' => $cleanNop],
                 [
@@ -226,13 +235,22 @@ class SpptController extends Controller
                     'address' => $validated['object_address'] ?? null,
                     'rt' => $validated['object_rt'] ?? null,
                     'rw' => $validated['object_rw'] ?? null,
-                    'dusun' => $validated['object_dusun'] ?? null,
+                    'dusun_id' => $dusunId,
+                    'dusun' => $dusunName,
                     'status' => 'normal',
                 ]
             );
 
+            $updatePayload = [];
             if ($taxObject->taxpayer_id !== $taxpayer->id) {
-                $taxObject->update(['taxpayer_id' => $taxpayer->id]);
+                $updatePayload['taxpayer_id'] = $taxpayer->id;
+            }
+            if ($dusunId && $taxObject->dusun_id !== (int)$dusunId) {
+                $updatePayload['dusun_id'] = $dusunId;
+                $updatePayload['dusun'] = $dusunName;
+            }
+            if (! empty($updatePayload)) {
+                $taxObject->update($updatePayload);
             }
 
             // 3. Components

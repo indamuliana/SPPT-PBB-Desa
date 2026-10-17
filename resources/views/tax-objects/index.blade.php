@@ -22,10 +22,10 @@
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NOP, nama WP, alamat, atau dusun..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
             </div>
             <div class="w-full sm:w-48">
-                <select name="dusun" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
+                <select name="dusun_id" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
                     <option value="">Semua Dusun</option>
                     @foreach($dusunList as $d)
-                    <option value="{{ $d }}" {{ request('dusun') === $d ? 'selected' : '' }}>{{ $d }}</option>
+                    <option value="{{ $d->id }}" {{ request('dusun_id') == $d->id || request('dusun') == $d->name ? 'selected' : '' }}>{{ $d->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -75,7 +75,7 @@
                             {{ $op->formatted_address }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-slate-600">
-                            {{ $op->dusun ?? '-' }}
+                            {{ $op->dusunRelation?->name ?? $op->dusun ?? '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             @if($op->isTo())

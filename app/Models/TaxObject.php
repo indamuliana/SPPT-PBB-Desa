@@ -19,9 +19,15 @@ class TaxObject extends Model
         'rt',
         'rw',
         'dusun',
+        'dusun_id',
         'status',
         'notes',
     ];
+
+    public function dusunRelation(): BelongsTo
+    {
+        return $this->belongsTo(Dusun::class, 'dusun_id');
+    }
 
     public function taxpayer(): BelongsTo
     {

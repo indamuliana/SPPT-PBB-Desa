@@ -46,13 +46,16 @@
                                    class="w-full pl-10 pr-3.5 py-2 rounded-xl border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-medium">
                         </div>
                         <div class="flex gap-2">
-                            <select name="dusun" class="px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
-                                <option value="">Semua Dusun</option>
+                            <select name="dusun" class="px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
+                                @if($isKadus && !empty($assignedDusunIds))
+                                    <option value="my" {{ $dusun === 'my' ? 'selected' : '' }}>📍 Wilayah Saya</option>
+                                @endif
+                                <option value="all" {{ $dusun === 'all' || ($dusun === '' && !$isKadus) ? 'selected' : '' }}>Semua Dusun</option>
                                 @foreach($dusunList as $d)
-                                    <option value="{{ $d }}" {{ $dusun == $d ? 'selected' : '' }}>{{ $d }}</option>
+                                    <option value="{{ $d->id }}" {{ (string)$dusun === (string)$d->id || $dusun === $d->name ? 'selected' : '' }}>{{ $d->name }}</option>
                                 @endforeach
                             </select>
-                            <select name="status" class="px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <select name="status" class="px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
                                 <option value="unpaid" {{ $statusFilter == 'unpaid' ? 'selected' : '' }}>Belum Lunas</option>
                                 <option value="all" {{ $statusFilter == 'all' ? 'selected' : '' }}>Semua Status</option>
                                 <option value="paid" {{ $statusFilter == 'paid' ? 'selected' : '' }}>Lunas</option>
@@ -87,8 +90,19 @@
                                     <span class="px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 text-[10px] font-bold">TO</span>
                                     @endif
                                 </td>
-                                <td class="py-2.5 px-3 text-slate-500 text-[11px]">
-                                    {{ $item->taxObject->dusun ?? '-' }}
+                                <td class="py-2.5 px-3 text-[11px]">
+                                    @php
+                                        $dusunName = $item->taxObject->dusunRelation?->name ?? $item->taxObject->dusun ?? '-';
+                                        $isMyDusun = $isKadus && $item->taxObject->dusun_id && in_array($item->taxObject->dusun_id, $assignedDusunIds);
+                                    @endphp
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-slate-600 font-medium">{{ $dusunName }}</span>
+                                        @if($isMyDusun)
+                                            <span class="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[9px] font-bold" title="Wilayah Kelolaan Anda">
+                                                Saya
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="py-2.5 px-3 text-right font-mono text-slate-700">
                                     Rp {{ number_format($item->total_bill, 0, ',', '.') }}

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
+use App\Models\Dusun;
 use App\Models\TaxObject;
 use App\Models\Taxpayer;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +15,7 @@ class TaxObjectController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = TaxObject::with(['taxpayer', 'sppts']);
+        $query = TaxObject::with(['taxpayer', 'sppts', 'dusunRelation']);
 
         if ($request->filled('search')) {
             $search = preg_replace('/[^0-9a-zA-Z]/', '', $request->search);
@@ -29,7 +30,9 @@ class TaxObjectController extends Controller
             });
         }
 
-        if ($request->filled('dusun')) {
+        if ($request->filled('dusun_id')) {
+            $query->where('dusun_id', $request->dusun_id);
+        } elseif ($request->filled('dusun')) {
             $query->where('dusun', $request->dusun);
         }
 
@@ -39,7 +42,7 @@ class TaxObjectController extends Controller
 
         $taxObjects = $query->latest('id')->paginate(15)->withQueryString();
 
-        $dusunList = TaxObject::whereNotNull('dusun')->distinct()->pluck('dusun');
+        $dusunList = Dusun::orderBy('name')->get();
 
         return view('tax-objects.index', compact('taxObjects', 'dusunList'));
     }
@@ -47,7 +50,8 @@ class TaxObjectController extends Controller
     public function create(): View
     {
         $taxpayers = Taxpayer::orderBy('name')->get();
-        return view('tax-objects.create', compact('taxpayers'));
+        $dusuns = Dusun::orderBy('name')->get();
+        return view('tax-objects.create', compact('taxpayers', 'dusuns'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -62,10 +66,16 @@ class TaxObjectController extends Controller
             'address' => ['nullable', 'string'],
             'rt' => ['nullable', 'string', 'max:5'],
             'rw' => ['nullable', 'string', 'max:5'],
+            'dusun_id' => ['nullable', 'exists:dusuns,id'],
             'dusun' => ['nullable', 'string', 'max:50'],
             'status' => ['required', Rule::in(['normal', 'to'])],
             'notes' => ['nullable', 'string'],
         ]);
+
+        if (! empty($validated['dusun_id'])) {
+            $dusunObj = Dusun::find($validated['dusun_id']);
+            $validated['dusun'] = $dusunObj?->name ?? $validated['dusun'] ?? null;
+        }
 
         $taxObject = TaxObject::create($validated);
 
@@ -77,7 +87,8 @@ class TaxObjectController extends Controller
     public function edit(TaxObject $taxObject): View
     {
         $taxpayers = Taxpayer::orderBy('name')->get();
-        return view('tax-objects.edit', compact('taxObject', 'taxpayers'));
+        $dusuns = Dusun::orderBy('name')->get();
+        return view('tax-objects.edit', compact('taxObject', 'taxpayers', 'dusuns'));
     }
 
     public function update(Request $request, TaxObject $taxObject): RedirectResponse
@@ -92,10 +103,16 @@ class TaxObjectController extends Controller
             'address' => ['nullable', 'string'],
             'rt' => ['nullable', 'string', 'max:5'],
             'rw' => ['nullable', 'string', 'max:5'],
+            'dusun_id' => ['nullable', 'exists:dusuns,id'],
             'dusun' => ['nullable', 'string', 'max:50'],
             'status' => ['required', Rule::in(['normal', 'to'])],
             'notes' => ['nullable', 'string'],
         ]);
+
+        if (! empty($validated['dusun_id'])) {
+            $dusunObj = Dusun::find($validated['dusun_id']);
+            $validated['dusun'] = $dusunObj?->name ?? $validated['dusun'] ?? null;
+        }
 
         $old = $taxObject->only(array_keys($validated));
         $taxObject->update($validated);

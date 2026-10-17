@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -51,6 +53,25 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function dusuns(): BelongsToMany
+    {
+        return $this->belongsToMany(Dusun::class, 'dusun_user')->withTimestamps();
+    }
+
+    public function assignedDusunIds(): array
+    {
+        return $this->dusuns->pluck('id')->toArray();
+    }
+
+    public function assignedDusunNames(): string
+    {
+        $names = $this->dusuns->pluck('name')->toArray();
+        if (! empty($names)) {
+            return implode(', ', $names);
+        }
+        return $this->dusun_name ?: 'Belum Ada Penugasan';
     }
 
     public function isAdmin(): bool

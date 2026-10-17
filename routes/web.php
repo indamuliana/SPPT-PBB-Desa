@@ -91,6 +91,8 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('users', UserController::class)->except(['show', 'destroy']);
         Route::post('/users/{user}/toggle', [UserController::class, 'toggleStatus'])->name('users.toggle');
+
+        Route::resource('dusuns', \App\Http\Controllers\DusunController::class)->except(['show']);
     });
 
     // Master Data Pajak & SPPT (Semua petugas bisa melihat data)
