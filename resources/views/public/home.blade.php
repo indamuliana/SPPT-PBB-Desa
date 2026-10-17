@@ -8,16 +8,16 @@
     <!-- ========================================================================= -->
     <section class="relative text-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[560px] flex items-center">
         
-        <!-- Background Foto Kantor Desa Sukahaji & Gradient Overlay -->
+        <!-- Background Foto Kantor Desa Sukahaji & Transparent Overlay -->
         <div class="absolute inset-0 z-0">
             <img 
                 src="{{ asset('images/kantor-desa-sukahaji.png') }}" 
-                alt="Kantor Desa Sukahaji Kecamatan Tanjungsari Kabupaten Sumedang" 
-                class="w-full h-full object-cover object-center transform scale-105 filter brightness-95"
+                alt="Kantor {{ str_starts_with(strtolower($village->name), 'desa') ? $village->name : 'Desa ' . $village->name }}" 
+                class="w-full h-full object-cover object-center transform scale-100"
             >
-            <!-- Layer Gelap & Gradasi Hijau Zamrud untuk Kontras Teks Maksimal -->
-            <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-emerald-950/85"></div>
-            <div class="absolute inset-0 bg-slate-950/30 backdrop-blur-[1px]"></div>
+            <!-- Layer Gradasi Transparan agar Foto Gedung Sangat Jelas Terlihat -->
+            <div class="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/45 to-slate-900/30"></div>
+            <div class="absolute inset-0 bg-slate-950/15"></div>
         </div>
 
         <div class="max-w-7xl mx-auto w-full relative z-10">
@@ -27,13 +27,13 @@
                 <div class="lg:col-span-7 space-y-6 text-left">
                     
                     <!-- Badge Status Resmi -->
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-semibold backdrop-blur-md">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/60 border border-emerald-400/40 text-emerald-300 text-xs font-semibold backdrop-blur-sm shadow-md">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>PORTAL RESMI PBB-P2 DESA SUKAHAJI</span>
+                        <span>PORTAL RESMI PBB-P2 {{ strtoupper(str_starts_with(strtolower($village->name), 'desa') ? $village->name : 'DESA ' . $village->name) }}</span>
                     </div>
 
                     <!-- Headline Utama -->
-                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-md">
                         Tata Kelola Pajak Desa yang <br>
                         <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300">
                             Transparan, Cepat & Terpercaya
@@ -41,8 +41,8 @@
                     </h1>
 
                     <!-- Deskripsi Sambutan -->
-                    <p class="text-slate-200 text-sm sm:text-base leading-relaxed max-w-xl font-normal drop-shadow-xs">
-                        Selamat datang di portal <strong class="text-white font-semibold">SADAYA PBB</strong> Pemerintah Desa Sukahaji, Kecamatan Tanjungsari, Kabupaten Sumedang. Warga dapat memeriksa status SPPT mandiri dan memantau realisasi penerimaan kas desa secara terbuka.
+                    <p class="text-slate-100 text-sm sm:text-base leading-relaxed max-w-xl font-normal drop-shadow-md">
+                        Selamat datang di portal <strong class="text-white font-semibold">SADAYA PBB</strong> Pemerintah {{ str_starts_with(strtolower($village->name), 'desa') ? $village->name : 'Desa ' . $village->name }}{{ $village->district ? ', ' . (str_starts_with($village->district, 'Kecamatan') ? $village->district : 'Kecamatan ' . $village->district) : '' }}{{ $village->regency ? ', ' . (str_starts_with($village->regency, 'Kabupaten') || str_starts_with($village->regency, 'Kota') ? $village->regency : 'Kabupaten ' . $village->regency) : '' }}. Warga dapat memeriksa status SPPT mandiri dan memantau realisasi penerimaan kas desa secara terbuka.
                     </p>
 
                     <!-- Form Cek Tagihan NOP Mandiri (Kontras Tinggi & Bersih) -->
@@ -83,16 +83,16 @@
                     </div>
 
                     <!-- Indikator Layanan & Keamanan -->
-                    <div class="pt-1 flex flex-wrap items-center gap-4 text-xs font-medium text-slate-300">
-                        <div class="flex items-center gap-1.5">
+                    <div class="pt-1 flex flex-wrap items-center gap-4 text-xs font-medium text-slate-200">
+                        <div class="flex items-center gap-1.5 drop-shadow-sm">
                             <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             <span>Kuitansi Ber-QR Code</span>
                         </div>
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5 drop-shadow-sm">
                             <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             <span>Dapat Dicicil Bertahap</span>
                         </div>
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5 drop-shadow-sm">
                             <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             <span>Audit Kas 3 Tingkat</span>
                         </div>
@@ -102,19 +102,21 @@
 
                 <!-- Kolom Kanan: Glassmorphism Info & Status Card Desa -->
                 <div class="lg:col-span-5">
-                    <div class="bg-slate-900/70 backdrop-blur-xl p-6 sm:p-7 rounded-3xl border border-white/20 shadow-2xl text-left space-y-5">
+                    <div class="bg-slate-950/60 backdrop-blur-md p-6 sm:p-7 rounded-3xl border border-white/25 shadow-2xl text-left space-y-5">
                         
-                        <!-- Header Kartu -->
+                        <!-- Header Kartu: Diambil Dinamis dari Database Identitas Desa -->
                         <div class="flex items-center gap-3.5 pb-4 border-b border-white/10">
                             <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 flex items-center justify-center font-bold shrink-0">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                             </div>
                             <div>
                                 <div class="flex items-center gap-2">
-                                    <h3 class="font-extrabold text-white text-base tracking-tight">Kantor Desa Sukahaji</h3>
-                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">ONLINE</span>
+                                    <h3 class="font-extrabold text-white text-base tracking-tight">Kantor {{ str_starts_with(strtolower($village->name), 'desa') ? $village->name : 'Desa ' . $village->name }}</h3>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/25 text-emerald-300 border border-emerald-400/40">ONLINE</span>
                                 </div>
-                                <p class="text-xs text-slate-300 mt-0.5">Kecamatan Tanjungsari, Kabupaten Sumedang</p>
+                                <p class="text-xs text-slate-300 mt-0.5">
+                                    {{ $village->district ? (str_starts_with($village->district, 'Kecamatan') ? $village->district : 'Kecamatan ' . $village->district) : '' }}{{ $village->regency ? ', ' . (str_starts_with($village->regency, 'Kabupaten') || str_starts_with($village->regency, 'Kota') ? $village->regency : 'Kabupaten ' . $village->regency) : '' }}
+                                </p>
                             </div>
                         </div>
 
