@@ -131,6 +131,12 @@
                         <span class="col-span-4 text-slate-600 font-medium">Sisa Tagihan Setelah Ini</span>
                         <span class="col-span-8 font-mono font-semibold text-slate-800">: Rp {{ number_format($payment->remaining_after, 0, ',', '.') }} ({{ $payment->remaining_after == 0 ? 'LUNAS' : 'STATUS CICILAN' }})</span>
                     </div>
+                    @if($payment->notes)
+                    <div class="grid grid-cols-12 py-0.5">
+                        <span class="col-span-4 text-slate-600 font-medium">Keterangan / Penyetor</span>
+                        <span class="col-span-8 text-slate-800 font-medium">: {{ $payment->notes }}</span>
+                    </div>
+                    @endif
                 </div>
 
                 <!-- QR Code & Signatures -->
@@ -208,6 +214,12 @@
                         <span class="col-span-4 text-slate-600 font-medium">Sisa Tagihan SPPT</span>
                         <span class="col-span-8 font-mono font-semibold text-slate-800">: Rp {{ number_format($payment->remaining_after, 0, ',', '.') }} ({{ $payment->remaining_after == 0 ? 'LUNAS' : 'CICILAN' }})</span>
                     </div>
+                    @if($payment->notes)
+                    <div class="grid grid-cols-12 py-0.5">
+                        <span class="col-span-4 text-slate-600 font-medium">Catatan / Penyetor</span>
+                        <span class="col-span-8 text-slate-800 font-medium">: {{ $payment->notes }}</span>
+                    </div>
+                    @endif
                 </div>
 
                 <!-- QR Code & Signatures -->
@@ -260,6 +272,9 @@
             <div>WP : <span class="font-bold">{{ $payment->sppt->taxObject->taxpayer?->name }}</span></div>
             <div>DSN: {{ $payment->sppt->taxObject->dusun ?? '-' }}</div>
             <div>THN: <span class="font-bold">{{ $payment->sppt->tax_year }}</span></div>
+            @if($payment->notes)
+            <div>KET: <span class="font-bold">{{ $payment->notes }}</span></div>
+            @endif
         </div>
 
         <div class="py-2 border-b border-dashed border-slate-400 space-y-1 text-[11px]">

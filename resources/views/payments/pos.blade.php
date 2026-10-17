@@ -323,12 +323,13 @@
                             </button>
                         </div>
                         <input type="number" 
-                               name="paid_amount" 
+                               name="amount_principal" 
                                x-model.number="payAmount" 
                                min="1" 
                                max="{{ $selectedSppt->remaining_bill }}" 
                                required 
                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold font-mono text-emerald-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <input type="hidden" name="paid_amount" :value="payAmount">
                         <p class="text-[11px] text-slate-400 mt-1">Boleh diubah untuk pembayaran cicilan / sebagian.</p>
                     </div>
 
@@ -336,11 +337,12 @@
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Denda Keterlambatan (Rp)</label>
                         <input type="number" 
-                               name="fine_amount" 
+                               name="amount_fine" 
                                x-model.number="fineAmount" 
                                min="0" 
                                value="0"
                                class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <input type="hidden" name="fine_amount" :value="fineAmount">
                     </div>
 
                     <!-- Input Nama Penyetor -->

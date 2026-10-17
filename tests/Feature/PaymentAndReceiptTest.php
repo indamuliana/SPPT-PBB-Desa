@@ -146,6 +146,24 @@ class PaymentAndReceiptTest extends TestCase
         $this->assertEquals(75000, $payment->remaining_after);
     }
 
+    public function test_cashier_can_process_payment_using_pos_form_field_names(): void
+    {
+        $response = $this->actingAs($this->kadus)->post('/payments', [
+            'sppt_id' => $this->spptNormal->id,
+            'paid_amount' => 125000,
+            'fine_amount' => 0,
+            'payer_name' => 'Bpk Sukarna Sendiri',
+        ]);
+
+        $this->spptNormal->refresh();
+        $this->assertTrue($this->spptNormal->isPaid());
+
+        $payment = Payment::where('sppt_id', $this->spptNormal->id)->first();
+        $this->assertNotNull($payment);
+        $this->assertStringContainsString('Penyetor: Bpk Sukarna Sendiri', $payment->notes);
+        $response->assertRedirect(route('payments.receipt', $payment));
+    }
+
     public function test_payment_cannot_exceed_remaining_bill(): void
     {
         $this->expectException(\InvalidArgumentException::class);

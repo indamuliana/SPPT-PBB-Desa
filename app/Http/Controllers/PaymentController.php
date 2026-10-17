@@ -148,18 +148,35 @@ class PaymentController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Support both naming conventions: amount_principal / paid_amount, amount_fine / fine_amount
+        if (! $request->has('amount_principal') && $request->has('paid_amount')) {
+            $request->merge(['amount_principal' => $request->input('paid_amount')]);
+        }
+        if (! $request->has('amount_fine') && $request->has('fine_amount')) {
+            $request->merge(['amount_fine' => $request->input('fine_amount')]);
+        }
+
         $validated = $request->validate([
             'sppt_id' => ['required', 'exists:sppts,id'],
             'amount_principal' => ['required', 'numeric', 'min:1'],
             'amount_fine' => ['nullable', 'numeric', 'min:0'],
+            'paid_amount' => ['nullable', 'numeric', 'min:1'],
+            'fine_amount' => ['nullable', 'numeric', 'min:0'],
+            'payer_name' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $fine = (float)($validated['amount_fine'] ?? 0);
-        $principal = (float)$validated['amount_principal'];
+        $fine = (float)($validated['amount_fine'] ?? $validated['fine_amount'] ?? 0);
+        $principal = (float)($validated['amount_principal'] ?? $validated['paid_amount']);
         $totalPaid = $principal + $fine;
 
-        $payment = DB::transaction(function () use ($validated, $principal, $fine, $totalPaid) {
+        $notes = $validated['notes'] ?? null;
+        if (! empty($validated['payer_name'])) {
+            $payer = trim($validated['payer_name']);
+            $notes = $notes ? "Penyetor: {$payer} | {$notes}" : "Penyetor: {$payer}";
+        }
+
+        $payment = DB::transaction(function () use ($validated, $principal, $fine, $totalPaid, $notes) {
             // Lock SPPT and related TaxObject for update to prevent concurrent race condition
             $sppt = Sppt::where('id', $validated['sppt_id'])->lockForUpdate()->firstOrFail();
             $taxObject = TaxObject::where('id', $sppt->tax_object_id)->lockForUpdate()->firstOrFail();
@@ -196,7 +213,7 @@ class PaymentController extends Controller
                 'remaining_after' => $remainingAfter,
                 'payment_method' => 'cash',
                 'status' => 'valid',
-                'notes' => $validated['notes'] ?? null,
+                'notes' => $notes,
             ]);
 
             AuditLog::log(
