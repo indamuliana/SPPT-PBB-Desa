@@ -27,15 +27,19 @@
                 <div class="lg:col-span-7 space-y-6 text-left">
                     
                     <!-- Logos & Badge Status Resmi -->
-                    <div class="flex flex-wrap items-center gap-3">
+                    <div class="flex flex-wrap items-center gap-3.5">
                         @if($village->regency_logo_url)
-                        <div class="h-11 w-11 rounded-xl bg-white/95 p-1 shadow-md flex items-center justify-center backdrop-blur-xs border border-white/20">
-                            <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="max-h-full max-w-full object-contain">
+                        <div class="h-12 max-w-[100px] flex items-center justify-center bg-transparent">
+                            <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="max-h-12 max-w-[100px] w-auto h-auto object-contain drop-shadow-lg">
                         </div>
                         @endif
                         @if($village->logo_url)
-                        <div class="h-11 w-11 rounded-xl bg-white/95 p-1 shadow-md flex items-center justify-center backdrop-blur-xs border border-white/20">
-                            <img src="{{ $village->logo_url }}" alt="Logo {{ $village->name }}" class="max-h-full max-w-full object-contain">
+                        <div class="h-12 max-w-[140px] flex items-center justify-center bg-transparent">
+                            <img src="{{ $village->logo_url }}" alt="Logo {{ $village->name }}" class="max-h-12 max-w-[140px] w-auto h-auto object-contain drop-shadow-lg">
+                        </div>
+                        @else
+                        <div class="h-12 max-w-[140px] flex items-center justify-center bg-transparent">
+                            <img src="{{ asset('images/logo-sadaya.svg') }}" alt="Logo SADAYA PBB" class="max-h-12 max-w-[140px] w-auto h-auto object-contain drop-shadow-lg">
                         </div>
                         @endif
 

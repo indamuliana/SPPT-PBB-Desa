@@ -42,9 +42,9 @@
                 <!-- Logo & Brand Identity -->
                 <a href="{{ route('home') }}" class="flex items-center gap-3.5 group">
                     @if($village->logo_url)
-                        <img src="{{ $village->logo_url }}" alt="Logo {{ $village->name }}" class="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-2xl bg-white p-1 shadow-md shadow-emerald-700/20 group-hover:scale-105 transition transform">
+                        <img src="{{ $village->logo_url }}" alt="Logo {{ $village->name }}" class="max-h-10 sm:max-h-11 max-w-[120px] w-auto h-auto object-contain bg-transparent group-hover:scale-105 transition transform">
                     @elseif($village->regency_logo_url)
-                        <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-2xl bg-white p-1 shadow-md shadow-emerald-700/20 group-hover:scale-105 transition transform">
+                        <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="max-h-10 sm:max-h-11 max-w-[100px] w-auto h-auto object-contain bg-transparent group-hover:scale-105 transition transform">
                     @else
                         <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 flex items-center justify-center font-black text-white shadow-md shadow-emerald-700/20 group-hover:scale-105 transition transform text-base tracking-wider">
                             SP
@@ -135,9 +135,9 @@
                 <div class="md:col-span-2 space-y-4">
                     <div class="flex items-center gap-3">
                         @if($village->logo_url)
-                            <img src="{{ $village->logo_url }}" alt="Logo {{ $village->name }}" class="w-10 h-10 object-contain rounded-xl bg-white p-1 shrink-0">
+                            <img src="{{ $village->logo_url }}" alt="Logo {{ $village->name }}" class="max-h-10 max-w-[120px] w-auto h-auto object-contain bg-transparent shrink-0">
                         @elseif($village->regency_logo_url)
-                            <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="w-10 h-10 object-contain rounded-xl bg-white p-1 shrink-0">
+                            <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="max-h-10 max-w-[100px] w-auto h-auto object-contain bg-transparent shrink-0">
                         @else
                             <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-black text-white text-sm shrink-0">
                                 SP
