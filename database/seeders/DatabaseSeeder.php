@@ -48,14 +48,14 @@ class DatabaseSeeder extends Seeder
             'description' => 'Wilayah Dusun III meliputi RW 03',
         ]);
 
-        // 3. Inisialisasi Akun Pengguna untuk Setiap Peran
+        // 3. Inisialisasi Akun Pengguna (3 Peran Resmi: Kolektor Desa, Kadus/Kasir, Kades)
         $users = [
             [
-                'name' => 'Administrator Desa',
-                'username' => 'admin',
-                'email' => 'admin@sukahaji.desa.id',
+                'name' => 'Dedi Suryana (Kolektor Desa)',
+                'username' => 'kolektor',
+                'email' => 'kolektor@sukahaji.desa.id',
                 'password' => Hash::make('password'),
-                'role' => 'admin',
+                'role' => 'kolektor',
                 'dusun_name' => null,
                 'phone' => '081234567890',
                 'is_active' => true,
@@ -68,26 +68,6 @@ class DatabaseSeeder extends Seeder
                 'role' => 'kadus',
                 'dusun_name' => 'Dusun I Babakan',
                 'phone' => '081234567891',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Dedi Suryana (Kolektor)',
-                'username' => 'kolektor',
-                'email' => 'kolektor@sukahaji.desa.id',
-                'password' => Hash::make('password'),
-                'role' => 'kolektor',
-                'dusun_name' => null,
-                'phone' => '081234567892',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Siti Rahayu (Kaur Keuangan)',
-                'username' => 'bendahara',
-                'email' => 'bendahara@sukahaji.desa.id',
-                'password' => Hash::make('password'),
-                'role' => 'bendahara',
-                'dusun_name' => null,
-                'phone' => '081234567893',
                 'is_active' => true,
             ],
             [
@@ -112,6 +92,9 @@ class DatabaseSeeder extends Seeder
                 $createdUser->dusuns()->syncWithoutDetaching([$dusun1->id]);
             }
         }
+
+        // Deactivate legacy admin and bendahara if present
+        User::whereIn('username', ['admin', 'bendahara'])->update(['is_active' => false]);
 
         // 4. Inisialisasi Data Contoh Wajib Pajak, Objek Pajak (NOP), dan SPPT
         $sampleData = [

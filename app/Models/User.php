@@ -76,7 +76,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['kolektor', 'admin'], true);
     }
 
     public function isKadus(): bool
@@ -91,7 +91,7 @@ class User extends Authenticatable
 
     public function isBendahara(): bool
     {
-        return $this->role === 'bendahara';
+        return in_array($this->role, ['kolektor', 'bendahara'], true);
     }
 
     public function isKades(): bool
@@ -102,11 +102,11 @@ class User extends Authenticatable
     public function getRoleLabelAttribute(): string
     {
         return match ($this->role) {
-            'admin' => 'Admin Desa',
-            'kadus' => 'Kadus / Kasir',
             'kolektor' => 'Kolektor Desa',
-            'bendahara' => 'Bendahara Desa',
+            'kadus' => 'Kadus / Kasir',
             'kades' => 'Kepala Desa',
+            'admin' => 'Kolektor Desa',
+            'bendahara' => 'Kolektor Desa',
             default => ucfirst($this->role),
         };
     }

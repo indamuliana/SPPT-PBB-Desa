@@ -24,7 +24,19 @@ class CheckRole
             return redirect()->route('login')->withErrors(['username' => 'Akun Anda dinonaktifkan. Silakan hubungi Administrator.']);
         }
 
-        if (empty($roles) || in_array($request->user()->role, $roles, true)) {
+        $userRole = $request->user()->role;
+
+        // Kolektor is the supreme role holding all administrative, financial, cashier, and oversight permissions
+        if ($userRole === 'kolektor') {
+            return $next($request);
+        }
+
+        // Backward compatibility for existing tests/seeders: admin and bendahara map to supreme/kolektor permissions
+        if (in_array($userRole, ['admin', 'bendahara'], true) && (in_array('kolektor', $roles, true) || in_array($userRole, $roles, true))) {
+            return $next($request);
+        }
+
+        if (empty($roles) || in_array($userRole, $roles, true)) {
             return $next($request);
         }
 

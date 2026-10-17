@@ -46,7 +46,7 @@ class UserController extends Controller
             'username' => ['required', 'string', 'max:50', 'alpha_dash', 'unique:users,username'],
             'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
-            'role' => ['required', Rule::in(['admin', 'kadus', 'kolektor', 'bendahara', 'kades'])],
+            'role' => ['required', Rule::in(['kolektor', 'kadus', 'kades'])],
             'dusun_name' => ['nullable', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30'],
         ]);
@@ -73,7 +73,7 @@ class UserController extends Controller
             'username' => ['required', 'string', 'max:50', 'alpha_dash', Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => ['nullable', 'string', 'min:6'],
-            'role' => ['required', Rule::in(['admin', 'kadus', 'kolektor', 'bendahara', 'kades'])],
+            'role' => ['required', Rule::in(['kolektor', 'kadus', 'kades'])],
             'dusun_name' => ['nullable', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:30'],
             'is_active' => ['required', 'boolean'],

@@ -90,22 +90,24 @@ class BankDepositController extends Controller
             'destination_bank' => $validated['destination_bank'],
             'deposit_amount' => $validated['deposit_amount'],
             'bank_ref_number' => $validated['bank_ref_number'] ?? null,
-            'status' => 'submitted',
+            'status' => 'approved',
+            'verifier_user_id' => $user->id,
+            'approved_at' => now(),
         ]);
 
         AuditLog::log(
             'deposit',
-            "Kolektor mencatat setoran bank #{$deposit->deposit_number} sebesar Rp " . number_format($deposit->deposit_amount, 0, ',', '.') . " tujuan {$deposit->destination_bank}",
+            "Kolektor mencatat & mengesahkan setoran bank #{$deposit->deposit_number} sebesar Rp " . number_format($deposit->deposit_amount, 0, ',', '.') . " tujuan {$deposit->destination_bank}",
             $deposit
         );
 
-        return redirect()->route('deposits.index')->with('success', 'Setoran kas berhasil dicatat dan menunggu pengesahan/verifikasi dari Admin Desa.');
+        return redirect()->route('deposits.index')->with('success', 'Setoran kas ke bank berhasil dicatat dan disahkan.');
     }
 
     public function approve(BankDeposit $deposit): RedirectResponse
     {
-        if (! auth()->user()->isAdmin()) {
-            abort(403, 'Hanya Administrator Desa yang berwenang mengesahkan setoran bank.');
+        if (! auth()->user()->isKolektor() && ! auth()->user()->isAdmin()) {
+            abort(403, 'Hanya Kolektor Desa yang berwenang mengesahkan setoran bank.');
         }
 
         if ($deposit->isApproved()) {
@@ -120,7 +122,7 @@ class BankDepositController extends Controller
 
         AuditLog::log(
             'deposit',
-            "Admin mengesahkan setoran bank #{$deposit->deposit_number} sebesar Rp " . number_format($deposit->deposit_amount, 0, ',', '.'),
+            "Kolektor mengesahkan setoran bank #{$deposit->deposit_number} sebesar Rp " . number_format($deposit->deposit_amount, 0, ',', '.'),
             $deposit
         );
 
@@ -129,8 +131,8 @@ class BankDepositController extends Controller
 
     public function reject(BankDeposit $deposit, Request $request): RedirectResponse
     {
-        if (! auth()->user()->isAdmin()) {
-            abort(403, 'Hanya Administrator Desa yang berwenang menolak setoran bank.');
+        if (! auth()->user()->isKolektor() && ! auth()->user()->isAdmin()) {
+            abort(403, 'Hanya Kolektor Desa yang berwenang menolak setoran bank.');
         }
 
         $request->validate([

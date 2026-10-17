@@ -84,28 +84,32 @@
 
             <!-- Quick Demo Role Switcher for Development & Testing -->
             <div class="mt-6 pt-5 border-t border-slate-200">
-                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5 text-center">Akun Uji Coba Cepat (Klik untuk Mengisi)</p>
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                    <button type="button" @click="fillCredentials('admin')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-left truncate flex items-center gap-1.5 transition">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                        <span class="truncate">Admin Desa</span>
+                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5 text-center">Pilih Akun Cepat (3 Peran Resmi)</p>
+                <div class="grid grid-cols-1 gap-2 text-xs">
+                    <button type="button" @click="fillCredentials('kolektor')" class="w-full px-3 py-2 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-100/70 text-slate-800 font-medium text-left flex items-center justify-between transition">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                            <span class="font-bold text-slate-900">Kolektor Desa</span>
+                            <span class="text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded font-semibold">Akses Tertinggi</span>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-mono">@kolektor</span>
                     </button>
-                    <button type="button" @click="fillCredentials('kadus1')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-left truncate flex items-center gap-1.5 transition">
-                        <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
-                        <span class="truncate">Kadus / Kasir</span>
-                    </button>
-                    <button type="button" @click="fillCredentials('kolektor')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-left truncate flex items-center gap-1.5 transition">
-                        <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
-                        <span class="truncate">Kolektor Desa</span>
-                    </button>
-                    <button type="button" @click="fillCredentials('bendahara')" class="px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-left truncate flex items-center gap-1.5 transition">
-                        <span class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
-                        <span class="truncate">Bendahara Desa</span>
-                    </button>
-                    <button type="button" @click="fillCredentials('kades')" class="col-span-2 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-center truncate flex items-center justify-center gap-1.5 transition">
-                        <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
-                        <span>Kepala Desa (Kuwu)</span>
-                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" @click="fillCredentials('kadus1')" class="px-2.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-left flex items-center justify-between transition">
+                            <div class="flex items-center gap-1.5 truncate">
+                                <span class="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                                <span class="truncate">Kadus / Kasir</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-mono">@kadus1</span>
+                        </button>
+                        <button type="button" @click="fillCredentials('kades')" class="px-2.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-left flex items-center justify-between transition">
+                            <div class="flex items-center gap-1.5 truncate">
+                                <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+                                <span class="truncate">Kepala Desa</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 font-mono">@kades</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

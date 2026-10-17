@@ -21,11 +21,9 @@
             </div>
             <div class="w-full sm:w-48">
                 <select name="role" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 outline-none bg-white">
-                    <option value="">Semua Peran</option>
-                    <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin Desa</option>
+                    <option value="">Semua Peran (3 Peran Resmi)</option>
+                    <option value="kolektor" {{ request('role') === 'kolektor' ? 'selected' : '' }}>Kolektor Desa (Akses Tertinggi)</option>
                     <option value="kadus" {{ request('role') === 'kadus' ? 'selected' : '' }}>Kadus / Kasir</option>
-                    <option value="kolektor" {{ request('role') === 'kolektor' ? 'selected' : '' }}>Kolektor Desa</option>
-                    <option value="bendahara" {{ request('role') === 'bendahara' ? 'selected' : '' }}>Bendahara Desa</option>
                     <option value="kades" {{ request('role') === 'kades' ? 'selected' : '' }}>Kepala Desa</option>
                 </select>
             </div>
@@ -61,10 +59,8 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold
-                                {{ $item->role === 'admin' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : '' }}
+                                {{ in_array($item->role, ['kolektor', 'admin', 'bendahara']) ? 'bg-amber-100 text-amber-800 border border-amber-200' : '' }}
                                 {{ $item->role === 'kadus' ? 'bg-blue-100 text-blue-800 border border-blue-200' : '' }}
-                                {{ $item->role === 'kolektor' ? 'bg-amber-100 text-amber-800 border border-amber-200' : '' }}
-                                {{ $item->role === 'bendahara' ? 'bg-purple-100 text-purple-800 border border-purple-200' : '' }}
                                 {{ $item->role === 'kades' ? 'bg-rose-100 text-rose-800 border border-rose-200' : '' }}">
                                 {{ $item->role_label }}
                             </span>

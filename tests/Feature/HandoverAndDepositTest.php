@@ -227,7 +227,7 @@ class HandoverAndDepositTest extends TestCase
             'received_at' => now(),
         ]);
 
-        // 1. Kolektor records deposit of 150.000
+        // 1. Kolektor (Pemegang Akses Tertinggi) records deposit of 150.000 (langsung terverifikasi/approved)
         $res = $this->actingAs($this->kolektor)->post(route('deposits.store'), [
             'deposit_date' => '2026-05-10',
             'destination_bank' => 'Bank bjb Cabang Majalengka',
@@ -238,13 +238,9 @@ class HandoverAndDepositTest extends TestCase
         $res->assertRedirect(route('deposits.index'));
         $deposit = BankDeposit::where('bank_ref_number', 'BJB-998877')->first();
         $this->assertNotNull($deposit);
-        $this->assertEquals('submitted', $deposit->status);
-
-        // 2. Admin approves deposit
-        $approveRes = $this->actingAs($this->admin)->post(route('deposits.approve', $deposit));
-        $approveRes->assertSessionHas('success');
+        $this->assertEquals('approved', $deposit->status);
         $this->assertTrue($deposit->fresh()->isApproved());
-        $this->assertEquals($this->admin->id, $deposit->fresh()->verifier_user_id);
+        $this->assertEquals($this->kolektor->id, $deposit->fresh()->verifier_user_id);
     }
 
     public function test_cashbook_reconciliation_renders_correctly()

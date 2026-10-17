@@ -42,8 +42,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/payments/{payment}/receipt', [\App\Http\Controllers\PaymentController::class, 'receipt'])->name('payments.receipt');
     Route::post('/payments/{payment}/cancel', [\App\Http\Controllers\PaymentController::class, 'requestCancellation'])->name('payments.cancel.request');
 
-    // Admin Pembatalan Transaksi Approval
-    Route::middleware('role:admin')->group(function () {
+    // Kolektor Pembatalan Transaksi Approval
+    Route::middleware('role:kolektor')->group(function () {
         Route::post('/payments/{payment}/cancel/approve', [\App\Http\Controllers\PaymentController::class, 'approveCancellation'])->name('payments.cancel.approve');
         Route::post('/payments/{payment}/cancel/reject', [\App\Http\Controllers\PaymentController::class, 'rejectCancellation'])->name('payments.cancel.reject');
     });
@@ -60,8 +60,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/deposits', [\App\Http\Controllers\BankDepositController::class, 'index'])->name('deposits.index');
     Route::get('/deposits/create', [\App\Http\Controllers\BankDepositController::class, 'create'])->name('deposits.create');
     Route::post('/deposits', [\App\Http\Controllers\BankDepositController::class, 'store'])->name('deposits.store');
-    Route::post('/deposits/{deposit}/approve', [\App\Http\Controllers\BankDepositController::class, 'approve'])->name('deposits.approve')->middleware('role:admin');
-    Route::post('/deposits/{deposit}/reject', [\App\Http\Controllers\BankDepositController::class, 'reject'])->name('deposits.reject')->middleware('role:admin');
+    Route::post('/deposits/{deposit}/approve', [\App\Http\Controllers\BankDepositController::class, 'approve'])->name('deposits.approve')->middleware('role:kolektor');
+    Route::post('/deposits/{deposit}/reject', [\App\Http\Controllers\BankDepositController::class, 'reject'])->name('deposits.reject')->middleware('role:kolektor');
 
     // Buku Kas & Rekonsiliasi Real-Time
     Route::get('/cashbook', [\App\Http\Controllers\CashBookController::class, 'index'])->name('cashbook.index');
@@ -80,8 +80,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/mutations/split-component', [\App\Http\Controllers\SpptMutationController::class, 'createSplitComponent'])->name('mutations.split-component');
     Route::post('/mutations/split-component', [\App\Http\Controllers\SpptMutationController::class, 'storeSplitComponent'])->name('mutations.store-split-component');
     Route::get('/mutations/{mutation}', [\App\Http\Controllers\SpptMutationController::class, 'show'])->name('mutations.show');
-    Route::post('/mutations/{mutation}/approve', [\App\Http\Controllers\SpptMutationController::class, 'approve'])->name('mutations.approve')->middleware('role:admin');
-    Route::post('/mutations/{mutation}/reject', [\App\Http\Controllers\SpptMutationController::class, 'reject'])->name('mutations.reject')->middleware('role:admin');
+    Route::post('/mutations/{mutation}/approve', [\App\Http\Controllers\SpptMutationController::class, 'approve'])->name('mutations.approve')->middleware('role:kolektor');
+    Route::post('/mutations/{mutation}/reject', [\App\Http\Controllers\SpptMutationController::class, 'reject'])->name('mutations.reject')->middleware('role:kolektor');
 
     // Modul Laporan & Ekspor Rekapitulasi
     Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
@@ -90,8 +90,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/cash-flow', [\App\Http\Controllers\ReportController::class, 'cashFlow'])->name('reports.cash-flow');
     Route::get('/reports/to-and-mutations', [\App\Http\Controllers\ReportController::class, 'toAndMutations'])->name('reports.to-and-mutations');
 
-    // Admin Only Settings & User Management
-    Route::middleware('role:admin')->group(function () {
+    // Kolektor Only Settings & User Management
+    Route::middleware('role:kolektor')->group(function () {
         Route::get('/settings/village', [VillageProfileController::class, 'edit'])->name('settings.village');
         Route::put('/settings/village', [VillageProfileController::class, 'update'])->name('settings.village.update');
 
@@ -110,8 +110,8 @@ Route::middleware('auth')->group(function () {
     // Autocomplete API for Tax Objects & NOP
     Route::get('/api/tax-objects/search', [\App\Http\Controllers\TaxObjectController::class, 'apiSearch'])->name('api.tax-objects.search');
 
-    // Admin Master Data & DHKP Ingestion
-    Route::middleware('role:admin')->group(function () {
+    // Kolektor Master Data & DHKP Ingestion
+    Route::middleware('role:kolektor')->group(function () {
         Route::get('/taxpayers/create', [\App\Http\Controllers\TaxpayerController::class, 'create'])->name('taxpayers.create');
         Route::post('/taxpayers', [\App\Http\Controllers\TaxpayerController::class, 'store'])->name('taxpayers.store');
         Route::get('/taxpayers/{taxpayer}/edit', [\App\Http\Controllers\TaxpayerController::class, 'edit'])->name('taxpayers.edit');
@@ -138,8 +138,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/sppts/import-previous-year', [\App\Http\Controllers\SpptController::class, 'importFromPreviousYear'])->name('sppts.import.previous-year');
     });
 
-    // Audit logs for Admin, Kades, and Bendahara
-    Route::middleware('role:admin,kades,bendahara')->group(function () {
+    // Audit logs for Kolektor and Kades
+    Route::middleware('role:kolektor,kades')->group(function () {
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     });
 });

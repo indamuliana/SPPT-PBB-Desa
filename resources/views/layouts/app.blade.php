@@ -125,7 +125,7 @@
                     <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
                     <span>Serah Terima Kas</span>
                 </a>
-                @if(in_array(auth()->user()->role, ['admin', 'kolektor', 'bendahara', 'kades']))
+                @if(in_array(auth()->user()->role, ['kolektor', 'kades']))
                 <a href="{{ route('deposits.index') }}" 
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition {{ request()->routeIs('deposits.*') ? 'bg-emerald-800/80 text-white shadow-sm' : 'text-emerald-200 hover:bg-emerald-900/60 hover:text-white' }}">
                     <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -147,7 +147,7 @@
                     <span>Pusat Laporan & Ekspor</span>
                 </a>
 
-                @if(auth()->user()->isAdmin())
+                @if(auth()->user()->isKolektor())
                 <div class="pt-3 pb-1 px-3 text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">
                     Pengaturan Sistem
                 </div>
@@ -168,7 +168,7 @@
                 </a>
                 @endif
 
-                @if(in_array(auth()->user()->role, ['admin', 'kades', 'bendahara']))
+                @if(in_array(auth()->user()->role, ['kolektor', 'kades']))
                 <a href="{{ route('audit-logs.index') }}" 
                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium transition {{ request()->routeIs('audit-logs.*') ? 'bg-emerald-800/80 text-white shadow-sm' : 'text-emerald-200 hover:bg-emerald-900/60 hover:text-white' }}">
                     <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>

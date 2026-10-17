@@ -22,10 +22,8 @@ class GuideController extends Controller
         $userRole = auth()->user()->role ?? 'admin';
 
         $roleStats = [
-            'admin' => User::where('role', 'admin')->where('is_active', true)->count(),
-            'kadus' => User::where('role', 'kadus')->where('is_active', true)->count(),
             'kolektor' => User::where('role', 'kolektor')->where('is_active', true)->count(),
-            'bendahara' => User::where('role', 'bendahara')->where('is_active', true)->count(),
+            'kadus' => User::where('role', 'kadus')->where('is_active', true)->count(),
             'kades' => User::where('role', 'kades')->where('is_active', true)->count(),
         ];
 
