@@ -159,9 +159,9 @@ class PaymentController extends Controller
             $sppt = Sppt::where('id', $validated['sppt_id'])->lockForUpdate()->firstOrFail();
             $taxObject = TaxObject::where('id', $sppt->tax_object_id)->lockForUpdate()->firstOrFail();
 
-            // Strict rule: TO objects CANNOT receive payments until mutated
-            if ($taxObject->isTo()) {
-                throw new \InvalidArgumentException('SPPT berstatus Tanpa Objek (TO). Pembayaran ditolak sampai data mutasi pemilik baru diselesaikan.');
+            // Strict rule: TO objects CANNOT receive payments until mutated or resolved
+            if ($taxObject->isTo() || $sppt->is_to_blocked) {
+                throw new \InvalidArgumentException('SPPT berstatus Tanpa Objek (TO) atau terblokir investigasi TO. Pembayaran ditolak sampai data mutasi pemilik baru atau investigasi diselesaikan.');
             }
 
             $currentRemaining = $sppt->remaining_bill;

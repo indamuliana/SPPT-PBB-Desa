@@ -148,6 +148,47 @@ class ToAndMutationTest extends TestCase
         $this->assertStringContainsString('Ibu Ratna', $toCase->fresh()->investigation_notes);
     }
 
+    public function test_resolving_to_case_unblocks_tax_object_and_sppt_for_payment()
+    {
+        $this->taxObject->update(['status' => 'to']);
+        $this->sppt->update(['is_to_blocked' => true]);
+
+        $toCase = ToCase::create([
+            'case_number' => ToCase::generateCaseNumber(),
+            'tax_object_id' => $this->taxObject->id,
+            'reported_by_user_id' => $this->kadus->id,
+            'assigned_to_user_id' => $this->kolektor->id,
+            'reason_type' => 'pemilik_tidak_dikenal',
+            'description' => 'Pemilik awal tidak jelas.',
+            'status' => 'investigating',
+        ]);
+
+        // Resolve case
+        $res = $this->actingAs($this->kolektor)->post(route('to-cases.investigation', $toCase), [
+            'status' => 'resolved',
+            'new_notes' => 'Kasus selesai diteliti. Pemilik telah terverifikasi dan siap membayar.',
+        ]);
+
+        $res->assertSessionHas('success');
+        $this->assertEquals('resolved', $toCase->fresh()->status);
+        $this->assertNotNull($toCase->fresh()->resolved_at);
+
+        // Tax object must return to normal and SPPT unblocked!
+        $this->assertEquals('normal', $this->taxObject->fresh()->status);
+        $this->assertFalse((bool)$this->sppt->fresh()->is_to_blocked);
+
+        // Kasir POS can now process payment without exception!
+        $payRes = $this->actingAs($this->kadus)->post(route('payments.store'), [
+            'sppt_id' => $this->sppt->id,
+            'amount_principal' => 250000,
+            'payment_date' => date('Y-m-d'),
+        ]);
+
+        $payRes->assertRedirect();
+        $this->assertEquals(250000, (float)$this->sppt->fresh()->paid_amount);
+        $this->assertEquals('paid', $this->sppt->fresh()->status);
+    }
+
     public function test_user_can_propose_mutation_and_prevent_same_taxpayer()
     {
         // 1. Trying to mutate with same old and new taxpayer fails

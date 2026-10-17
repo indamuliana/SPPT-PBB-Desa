@@ -101,8 +101,12 @@ class SpptController extends Controller
             return back()->withInput()->withErrors(['tax_object_id' => 'Ketetapan SPPT untuk NOP dan tahun pajak ini sudah terdaftar.']);
         }
 
+        $taxObject = TaxObject::findOrFail($validated['tax_object_id']);
         $validated['total_bill'] = $validated['pbb_terutang'];
+        $validated['fine_amount'] = 0;
+        $validated['paid_amount'] = 0;
         $validated['status'] = 'unpaid';
+        $validated['is_to_blocked'] = $taxObject->isTo();
 
         $sppt = Sppt::create($validated);
 
@@ -367,22 +371,49 @@ class SpptController extends Controller
             $tarifPercent = (float)($village->tax_rate_percent ?? 0.100);
             $pbbTerutang = round($njopPerhitungan * ($tarifPercent / 100));
 
-            $sppt = Sppt::updateOrCreate(
-                [
+            $existingSppt = Sppt::where('tax_object_id', $taxObject->id)
+                ->where('tax_year', $taxYear)
+                ->first();
+
+            if ($existingSppt) {
+                if ((float)$existingSppt->paid_amount > $pbbTerutang) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'pbb_terutang' => 'Nominal tagihan PBB terutang baru (Rp ' . number_format($pbbTerutang, 0, ',', '.') . ') tidak boleh lebih kecil dari jumlah cicilan yang telah dibayar (Rp ' . number_format($existingSppt->paid_amount, 0, ',', '.') . ').'
+                    ]);
+                }
+
+                $existingFine = (float)$existingSppt->fine_amount;
+                $newTotalBill = $pbbTerutang + $existingFine;
+
+                $existingSppt->due_date = $validated['due_date'] ?? $existingSppt->due_date ?? "{$taxYear}-09-30";
+                $existingSppt->njop_dasar = $totalNjopDasar;
+                $existingSppt->njoptkp = $njoptkp;
+                $existingSppt->njop_perhitungan = $njopPerhitungan;
+                $existingSppt->tarif_percent = $tarifPercent;
+                $existingSppt->pbb_terutang = $pbbTerutang;
+                $existingSppt->total_bill = $newTotalBill;
+                $existingSppt->is_to_blocked = $taxObject->isTo();
+                $existingSppt->recalculateStatus();
+                $existingSppt->save();
+
+                $sppt = $existingSppt;
+            } else {
+                $sppt = Sppt::create([
                     'tax_object_id' => $taxObject->id,
                     'tax_year' => $taxYear,
-                ],
-                [
                     'due_date' => $validated['due_date'] ?? "{$taxYear}-09-30",
                     'njop_dasar' => $totalNjopDasar,
                     'njoptkp' => $njoptkp,
                     'njop_perhitungan' => $njopPerhitungan,
                     'tarif_percent' => $tarifPercent,
                     'pbb_terutang' => $pbbTerutang,
+                    'fine_amount' => 0,
                     'total_bill' => $pbbTerutang,
+                    'paid_amount' => 0,
                     'status' => 'unpaid',
-                ]
-            );
+                    'is_to_blocked' => $taxObject->isTo(),
+                ]);
+            }
 
             AuditLog::log('create', "Perekaman SPPT Terpadu NOP {$taxObject->formatted_nop} Tahun {$taxYear} sebesar Rp " . number_format($pbbTerutang, 0, ',', '.'), $sppt);
 
@@ -417,9 +448,10 @@ class SpptController extends Controller
         }
 
         $oldValues = $sppt->only(['pbb_terutang', 'total_bill', 'due_date', 'dhkp_row_ref', 'njoptkp']);
+        $existingFine = (float)$sppt->fine_amount;
 
         $sppt->pbb_terutang = $newBill;
-        $sppt->total_bill = $newBill;
+        $sppt->total_bill = $newBill + $existingFine;
         $sppt->due_date = $validated['due_date'] ?? $sppt->due_date;
         $sppt->dhkp_row_ref = $validated['dhkp_row_ref'] ?? null;
         if (isset($validated['njoptkp'])) {

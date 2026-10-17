@@ -410,4 +410,77 @@ class TaxMasterAndDhkpTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_import_from_previous_year_skips_inactive_tax_objects(): void
+    {
+        $wp = Taxpayer::create(['name' => 'Warga Nonaktif']);
+        $op = TaxObject::create([
+            'nop' => '321205000100777003',
+            'taxpayer_id' => $wp->id,
+            'status' => 'inactive',
+            'deactivation_reason' => 'pecah',
+        ]);
+
+        Sppt::create([
+            'tax_object_id' => $op->id,
+            'tax_year' => 2025,
+            'pbb_terutang' => 100000,
+            'total_bill' => 100000,
+            'status' => 'unpaid',
+        ]);
+
+        $response = $this->actingAs($this->admin)->post('/sppts/import-previous-year', [
+            'source_year' => 2025,
+            'target_year' => 2026,
+            'on_duplicate' => 'skip',
+        ]);
+
+        $response->assertRedirect('/sppts?year=2026');
+
+        // Target SPPT for 2026 must NOT be created because object is inactive
+        $this->assertDatabaseMissing('sppts', [
+            'tax_object_id' => $op->id,
+            'tax_year' => 2026,
+        ]);
+    }
+
+    public function test_tax_object_component_auto_calculates_total_njop(): void
+    {
+        $wp = Taxpayer::create(['name' => 'Warga Komponen']);
+        $op = TaxObject::create([
+            'nop' => '321205000100777004',
+            'taxpayer_id' => $wp->id,
+            'status' => 'normal',
+        ]);
+
+        // Create without providing total_njop
+        $comp = \App\Models\TaxObjectComponent::create([
+            'tax_object_id' => $op->id,
+            'type' => 'bumi',
+            'area_m2' => 150,
+            'njop_per_m2' => 200000,
+            'tax_year' => 2026,
+        ]);
+
+        $comp->refresh();
+        $this->assertEquals(30000000, (float)$comp->total_njop);
+
+        // Update area_m2 without explicit total_njop
+        $comp->update(['area_m2' => 200]);
+        $comp->refresh();
+        $this->assertEquals(40000000, (float)$comp->total_njop);
+    }
+
+    public function test_taxpayer_search_with_formatted_nik(): void
+    {
+        Taxpayer::create([
+            'name' => 'Ahmad Dahlan',
+            'nik' => '3211050101900005',
+        ]);
+
+        // Search with dots/formatting
+        $response = $this->actingAs($this->kadus)->get('/taxpayers?search=32.11.0501.0190.0005');
+        $response->assertStatus(200);
+        $response->assertSee('Ahmad Dahlan');
+    }
 }

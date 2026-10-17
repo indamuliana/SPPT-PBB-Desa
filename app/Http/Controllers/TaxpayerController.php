@@ -15,12 +15,15 @@ class TaxpayerController extends Controller
         $query = Taxpayer::withCount('taxObjects');
 
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('nik', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('dusun', 'like', "%{$search}%");
+            $rawSearch = trim((string)$request->search);
+            $cleanNik = preg_replace('/[^0-9]/', '', $rawSearch);
+            $query->where(function ($q) use ($rawSearch, $cleanNik) {
+                $q->where('name', 'like', "%{$rawSearch}%")
+                  ->orWhere('address', 'like', "%{$rawSearch}%")
+                  ->orWhere('dusun', 'like', "%{$rawSearch}%");
+                if (! empty($cleanNik)) {
+                    $q->orWhere('nik', 'like', "%{$cleanNik}%");
+                }
             });
         }
 
@@ -42,6 +45,12 @@ class TaxpayerController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if ($request->filled('nik')) {
+            $request->merge([
+                'nik' => preg_replace('/[^0-9]/', '', (string)$request->nik),
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'nik' => ['nullable', 'string', 'max:16'],
@@ -70,6 +79,12 @@ class TaxpayerController extends Controller
 
     public function update(Request $request, Taxpayer $taxpayer): RedirectResponse
     {
+        if ($request->filled('nik')) {
+            $request->merge([
+                'nik' => preg_replace('/[^0-9]/', '', (string)$request->nik),
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'nik' => ['nullable', 'string', 'max:16'],

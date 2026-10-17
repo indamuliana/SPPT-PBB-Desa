@@ -19,14 +19,19 @@ class TaxObjectController extends Controller
         $query = TaxObject::with(['taxpayer', 'sppts', 'dusunRelation']);
 
         if ($request->filled('search')) {
-            $search = preg_replace('/[^0-9a-zA-Z]/', '', $request->search);
-            $rawSearch = $request->search;
-            $query->where(function ($q) use ($search, $rawSearch) {
-                $q->where('nop', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$rawSearch}%")
+            $rawSearch = trim((string)$request->search);
+            $searchNop = preg_replace('/[^0-9]/', '', $rawSearch);
+            $query->where(function ($q) use ($rawSearch, $searchNop) {
+                if (! empty($searchNop)) {
+                    $q->where('nop', 'like', "%{$searchNop}%");
+                }
+                $q->orWhere('address', 'like', "%{$rawSearch}%")
                   ->orWhere('dusun', 'like', "%{$rawSearch}%")
-                  ->orWhereHas('taxpayer', function ($tq) use ($rawSearch) {
+                  ->orWhereHas('taxpayer', function ($tq) use ($rawSearch, $searchNop) {
                       $tq->where('name', 'like', "%{$rawSearch}%");
+                      if (! empty($searchNop)) {
+                          $tq->orWhere('nik', 'like', "%{$searchNop}%");
+                      }
                   });
             });
         }
@@ -215,8 +220,11 @@ class TaxObjectController extends Controller
             if (! empty($clean)) {
                 $q->where('nop', 'like', "%{$clean}%");
             }
-            $q->orWhereHas('taxpayer', function ($tq) use ($query) {
+            $q->orWhereHas('taxpayer', function ($tq) use ($query, $clean) {
                 $tq->where('name', 'like', "%{$query}%");
+                if (! empty($clean)) {
+                    $tq->orWhere('nik', 'like', "%{$clean}%");
+                }
             });
         })
         ->take(10)

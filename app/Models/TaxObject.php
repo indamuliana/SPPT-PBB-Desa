@@ -69,7 +69,12 @@ class TaxObject extends Model
 
     public function isInactive(): bool
     {
-        return $this->status === 'inactive';
+        return in_array($this->status, ['inactive', 'deactivated']);
+    }
+
+    public function isNormal(): bool
+    {
+        return $this->status === 'normal';
     }
 
     public function getDeactivationReasonLabelAttribute(): ?string

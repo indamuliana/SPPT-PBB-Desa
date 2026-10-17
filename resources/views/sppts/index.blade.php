@@ -166,7 +166,7 @@
                             Rp {{ number_format($item->remaining_bill, 0, ',', '.') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            @if($item->taxObject->isTo())
+                            @if($item->taxObject->isTo() || $item->is_to_blocked)
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
                                 Blokir TO
                             </span>

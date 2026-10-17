@@ -524,7 +524,7 @@ class DhkpImportService
             }])
             ->where('tax_year', $sourceYear)
             ->whereHas('taxObject', function ($q) use ($dusunId) {
-                $q->where('status', '!=', 'deactivated');
+                $q->whereNotIn('status', ['inactive', 'deactivated']);
                 if ($dusunId) {
                     $q->where('dusun_id', $dusunId);
                 }
@@ -549,7 +549,7 @@ class DhkpImportService
         ) {
             foreach ($sourceSppts as $src) {
                 $taxObject = $src->taxObject;
-                if (! $taxObject || $taxObject->status === 'deactivated') {
+                if (! $taxObject || in_array($taxObject->status, ['inactive', 'deactivated'])) {
                     $skipped++;
                     continue;
                 }

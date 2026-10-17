@@ -138,4 +138,87 @@ class UnifiedSpptTest extends TestCase
             'status' => 'unpaid',
         ]);
     }
+
+    public function test_store_unified_preserves_paid_amount_and_recalculates_status(): void
+    {
+        $admin = User::factory()->create(['username' => 'admin_test2', 'role' => 'admin', 'is_active' => true]);
+
+        $wp = Taxpayer::create(['name' => 'Warga Taat', 'nik' => '3205019999990001']);
+        $obj = TaxObject::create([
+            'nop' => '320501000100999001',
+            'taxpayer_id' => $wp->id,
+            'status' => 'normal',
+        ]);
+
+        $sppt = \App\Models\Sppt::create([
+            'tax_object_id' => $obj->id,
+            'tax_year' => 2026,
+            'njop_dasar' => 100000000,
+            'njoptkp' => 10000000,
+            'njop_perhitungan' => 90000000,
+            'tarif_percent' => 0.100,
+            'pbb_terutang' => 90000,
+            'fine_amount' => 5000,
+            'total_bill' => 95000,
+            'paid_amount' => 50000,
+            'status' => 'partial',
+        ]);
+
+        // Re-record via store-unified with higher components leading to pbb_terutang = 100000
+        // (110.000.000 - 10.000.000 = 100.000.000 * 0.1% = 100.000)
+        $payload = [
+            'taxpayer_mode' => 'existing',
+            'taxpayer_id' => $wp->id,
+            'nop' => $obj->nop,
+            'bumi_area_m2' => 110,
+            'bumi_njop_per_m2' => 1000000,
+            'tax_year' => 2026,
+            'njoptkp' => 10000000,
+        ];
+
+        $response = $this->actingAs($admin)->post(route('sppts.store-unified'), $payload);
+        $response->assertRedirect(route('sppts.index', ['year' => 2026]));
+
+        $sppt->refresh();
+        $this->assertEquals(100000, (float)$sppt->pbb_terutang);
+        $this->assertEquals(5000, (float)$sppt->fine_amount); // Fine preserved!
+        $this->assertEquals(105000, (float)$sppt->total_bill); // 100000 + 5000 fine
+        $this->assertEquals(50000, (float)$sppt->paid_amount); // Paid cash preserved!
+        $this->assertEquals('partial', $sppt->status); // Recalculated!
+    }
+
+    public function test_store_unified_fails_if_new_bill_is_lower_than_paid_amount(): void
+    {
+        $admin = User::factory()->create(['username' => 'admin_test3', 'role' => 'admin', 'is_active' => true]);
+
+        $wp = Taxpayer::create(['name' => 'Warga Lunas', 'nik' => '3205019999990002']);
+        $obj = TaxObject::create([
+            'nop' => '320501000100999002',
+            'taxpayer_id' => $wp->id,
+            'status' => 'normal',
+        ]);
+
+        \App\Models\Sppt::create([
+            'tax_object_id' => $obj->id,
+            'tax_year' => 2026,
+            'pbb_terutang' => 100000,
+            'total_bill' => 100000,
+            'paid_amount' => 100000,
+            'status' => 'paid',
+        ]);
+
+        // Attempt to lower bill to 20.000 (below 100.000 already paid)
+        $payload = [
+            'taxpayer_mode' => 'existing',
+            'taxpayer_id' => $wp->id,
+            'nop' => $obj->nop,
+            'bumi_area_m2' => 30,
+            'bumi_njop_per_m2' => 1000000, // 30.000.000 - 10.000.000 = 20.000.000 -> 20.000
+            'tax_year' => 2026,
+            'njoptkp' => 10000000,
+        ];
+
+        $response = $this->actingAs($admin)->post(route('sppts.store-unified'), $payload);
+        $response->assertSessionHasErrors('pbb_terutang');
+    }
 }

@@ -26,11 +26,17 @@ class ToCaseController extends Controller
         }
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            $cleanNop = preg_replace('/[^0-9]/', '', $search);
+            $query->where(function ($q) use ($search, $cleanNop) {
                 $q->where('case_number', 'like', "%{$search}%")
-                  ->orWhereHas('taxObject', function ($sub) use ($search) {
-                      $sub->where('nop', 'like', "%{$search}%")
-                          ->orWhere('address', 'like', "%{$search}%");
+                  ->orWhereHas('taxObject', function ($sub) use ($search, $cleanNop) {
+                      if (! empty($cleanNop)) {
+                          $sub->where('nop', 'like', "%{$cleanNop}%");
+                      }
+                      $sub->orWhere('address', 'like', "%{$search}%")
+                          ->orWhereHas('taxpayer', function ($tp) use ($search) {
+                              $tp->where('name', 'like', "%{$search}%");
+                          });
                   });
             });
         }
@@ -146,13 +152,39 @@ class ToCaseController extends Controller
             $updates['resolved_at'] = now();
         }
 
-        $toCase->update($updates);
+        DB::transaction(function () use ($toCase, $updates, $validated) {
+            $toCase->update($updates);
 
-        AuditLog::log(
-            'to_case',
-            "Memperbarui investigasi kasus TO #{$toCase->case_number}. Status: {$toCase->status}",
-            $toCase
-        );
+            if ($validated['status'] === 'resolved') {
+                $hasOtherActiveCases = ToCase::where('tax_object_id', $toCase->tax_object_id)
+                    ->where('id', '!=', $toCase->id)
+                    ->whereIn('status', ['open', 'investigating'])
+                    ->exists();
+
+                if (! $hasOtherActiveCases) {
+                    $taxObject = $toCase->taxObject;
+                    if ($taxObject && $taxObject->isTo()) {
+                        $taxObject->update(['status' => 'normal']);
+                    }
+
+                    // Unblock all SPPTs under this Tax Object so citizen can pay
+                    $sppts = Sppt::where('tax_object_id', $toCase->tax_object_id)->get();
+                    foreach ($sppts as $sppt) {
+                        if ($sppt->is_to_blocked) {
+                            $sppt->is_to_blocked = false;
+                            $sppt->recalculateStatus();
+                            $sppt->save();
+                        }
+                    }
+                }
+            }
+
+            AuditLog::log(
+                'to_case',
+                "Memperbarui investigasi kasus TO #{$toCase->case_number}. Status: {$toCase->status}",
+                $toCase
+            );
+        });
 
         return back()->with('success', 'Catatan investigasi kasus TO berhasil diperbarui.');
     }
