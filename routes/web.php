@@ -30,6 +30,10 @@ Route::middleware('auth')->group(function () {
     // Dashboard accessible by all authenticated roles
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Buku Panduan Aplikasi & Alur Operasional (Semua Role)
+    Route::get('/guide', [\App\Http\Controllers\GuideController::class, 'index'])->name('guide.index');
+    Route::get('/guide/download-pdf', [\App\Http\Controllers\GuideController::class, 'downloadPdf'])->name('guide.download-pdf');
+
     // Loket Kasir POS & Transaksi Pembayaran
     Route::get('/pos', [\App\Http\Controllers\PaymentController::class, 'pos'])->name('payments.pos');
     Route::post('/payments', [\App\Http\Controllers\PaymentController::class, 'store'])->name('payments.store');

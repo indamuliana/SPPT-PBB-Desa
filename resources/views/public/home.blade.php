@@ -34,15 +34,15 @@
 
                     <!-- Headline Utama -->
                     <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight drop-shadow-md">
-                        Tata Kelola Pajak Desa yang <br>
+                        SADAYA PBB<br>
                         <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300">
-                            Transparan, Cepat & Terpercaya
+                            Sistem Administrasi Data dan Pelayanan Pajak PBB Desa
                         </span>
                     </h1>
 
                     <!-- Deskripsi Sambutan -->
                     <p class="text-slate-100 text-sm sm:text-base leading-relaxed max-w-xl font-normal drop-shadow-md">
-                        Selamat datang di portal <strong class="text-white font-semibold">SADAYA PBB</strong> Pemerintah {{ str_starts_with(strtolower($village->name), 'desa') ? $village->name : 'Desa ' . $village->name }}{{ $village->district ? ', ' . (str_starts_with($village->district, 'Kecamatan') ? $village->district : 'Kecamatan ' . $village->district) : '' }}{{ $village->regency ? ', ' . (str_starts_with($village->regency, 'Kabupaten') || str_starts_with($village->regency, 'Kota') ? $village->regency : 'Kabupaten ' . $village->regency) : '' }}. Warga dapat memeriksa status SPPT mandiri dan memantau realisasi penerimaan kas desa secara terbuka.
+                        Selamat datang di portal <strong class="text-white font-semibold">SADAYA PBB</strong> Pemerintah {{ str_starts_with(strtolower($village->name), 'desa') ? $village->name : 'Desa ' . $village->name }}{{ $village->district ? ', ' . (str_starts_with($village->district, 'Kecamatan') ? $village->district : 'Kecamatan ' . $village->district) : '' }}{{ $village->regency ? ', ' . (str_starts_with($village->regency, 'Kabupaten') || str_starts_with($village->regency, 'Kota') ? $village->regency : 'Kabupaten ' . $village->regency) : '' }}. Warga dapat memeriksa status SPPT mandiri dan memantau realisasi penerimaan Pajak Bumi dan Bangunan.
                     </p>
 
                     <!-- Form Cek Tagihan NOP Mandiri (Kontras Tinggi & Bersih) -->
