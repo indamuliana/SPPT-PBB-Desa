@@ -4,21 +4,30 @@
 <div x-data="publicPortal()" class="w-full">
 
     <!-- ========================================================================= -->
-    <!-- 1. HERO SECTION: ELEGAN, RAPIH & SIMETRIS                                -->
+    <!-- 1. HERO SECTION: FOTO KANTOR DESA SEBAGAI LATAR BELAKANG                  -->
     <!-- ========================================================================= -->
-    <section class="relative bg-gradient-to-b from-slate-950 via-emerald-950 to-slate-900 text-white py-14 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section class="relative text-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[560px] flex items-center">
         
-        <!-- Ambient Radial Glow -->
-        <div class="absolute top-0 left-1/3 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <!-- Background Foto Kantor Desa Sukahaji & Gradient Overlay -->
+        <div class="absolute inset-0 z-0">
+            <img 
+                src="{{ asset('images/kantor-desa-sukahaji.png') }}" 
+                alt="Kantor Desa Sukahaji Kecamatan Tanjungsari Kabupaten Sumedang" 
+                class="w-full h-full object-cover object-center transform scale-105 filter brightness-95"
+            >
+            <!-- Layer Gelap & Gradasi Hijau Zamrud untuk Kontras Teks Maksimal -->
+            <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/90 to-emerald-950/85"></div>
+            <div class="absolute inset-0 bg-slate-950/30 backdrop-blur-[1px]"></div>
+        </div>
 
-        <div class="max-w-7xl mx-auto relative z-10">
+        <div class="max-w-7xl mx-auto w-full relative z-10">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
                 
                 <!-- Kolom Kiri: Informasi, Headline & Form Cek NOP -->
                 <div class="lg:col-span-7 space-y-6 text-left">
                     
                     <!-- Badge Status Resmi -->
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold backdrop-blur-sm">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-semibold backdrop-blur-md">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         <span>PORTAL RESMI PBB-P2 DESA SUKAHAJI</span>
                     </div>
@@ -32,13 +41,13 @@
                     </h1>
 
                     <!-- Deskripsi Sambutan -->
-                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl font-normal">
+                    <p class="text-slate-200 text-sm sm:text-base leading-relaxed max-w-xl font-normal drop-shadow-xs">
                         Selamat datang di portal <strong class="text-white font-semibold">SADAYA PBB</strong> Pemerintah Desa Sukahaji, Kecamatan Tanjungsari, Kabupaten Sumedang. Warga dapat memeriksa status SPPT mandiri dan memantau realisasi penerimaan kas desa secara terbuka.
                     </p>
 
                     <!-- Form Cek Tagihan NOP Mandiri (Kontras Tinggi & Bersih) -->
                     <div id="cek-tagihan" class="pt-2 max-w-xl">
-                        <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-xl border border-slate-100 text-slate-800">
+                        <div class="bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-2xl border border-white/30 text-slate-800">
                             <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
                                 Cek Ketetapan & Tagihan PBB-P2 Mandiri
                             </label>
@@ -68,7 +77,7 @@
                             </form>
                             <div class="flex items-center justify-between text-[11px] text-slate-500 pt-2 px-1">
                                 <span>*Format 18 digit angka atau format resmi bertitik</span>
-                                <a href="#panduan" class="text-emerald-700 font-medium hover:underline">Petunjuk Pembayaran &rarr;</a>
+                                <a href="#panduan" class="text-emerald-700 font-semibold hover:underline">Petunjuk Pembayaran &rarr;</a>
                             </div>
                         </div>
                     </div>
@@ -91,42 +100,66 @@
 
                 </div>
 
-                <!-- Kolom Kanan: Foto Resmi Kantor Desa Sukahaji & Ringkasan Indikator -->
-                <div class="lg:col-span-5 space-y-4">
-                    
-                    <!-- Frame Foto Utama -->
-                    <div class="bg-white/10 p-2 sm:p-2.5 rounded-3xl border border-white/20 shadow-2xl backdrop-blur-sm">
-                        <div class="relative rounded-2xl overflow-hidden aspect-[16/10] bg-slate-900 group">
-                            <img 
-                                src="{{ asset('images/kantor-desa-sukahaji.png') }}" 
-                                alt="Kantor Desa Sukahaji Kecamatan Tanjungsari Kabupaten Sumedang" 
-                                class="w-full h-full object-cover object-center transform group-hover:scale-105 transition duration-700 ease-out"
-                            >
-                            <!-- Label Identitas Foto -->
-                            <div class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent text-left">
-                                <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500 text-slate-950 uppercase tracking-wider inline-block mb-1">
-                                    Kantor Desa Sukahaji
-                                </span>
-                                <p class="text-xs font-semibold text-white">Kecamatan Tanjungsari &bull; Kabupaten Sumedang</p>
-                                <p class="text-[11px] text-slate-300">Pusat Layanan Terpadu & Loket Kasir PBB-P2</p>
+                <!-- Kolom Kanan: Glassmorphism Info & Status Card Desa -->
+                <div class="lg:col-span-5">
+                    <div class="bg-slate-900/70 backdrop-blur-xl p-6 sm:p-7 rounded-3xl border border-white/20 shadow-2xl text-left space-y-5">
+                        
+                        <!-- Header Kartu -->
+                        <div class="flex items-center gap-3.5 pb-4 border-b border-white/10">
+                            <div class="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 flex items-center justify-center font-bold shrink-0">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="font-extrabold text-white text-base tracking-tight">Kantor Desa Sukahaji</h3>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">ONLINE</span>
+                                </div>
+                                <p class="text-xs text-slate-300 mt-0.5">Kecamatan Tanjungsari, Kabupaten Sumedang</p>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Rapi & Simetris: 2 Kartu Indikator Cepat Berdampingan -->
-                    <div class="grid grid-cols-2 gap-3 text-left">
-                        <div class="bg-white/10 backdrop-blur-md border border-white/15 p-3.5 rounded-2xl text-white">
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Tahun Pajak Aktif</p>
-                            <p class="text-xl font-extrabold font-mono mt-0.5">{{ $stats['active_tax_year'] }}</p>
-                            <p class="text-[10px] text-slate-400">Ketetapan DHKP Desa</p>
+                        <!-- Metrik Ringkas -->
+                        <div class="space-y-3 text-xs">
+                            <div class="flex justify-between items-center py-1 border-b border-white/5">
+                                <span class="text-slate-300">Tahun Pajak Ketetapan:</span>
+                                <span class="font-bold font-mono text-emerald-300 text-sm">{{ $stats['active_tax_year'] }}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-b border-white/5">
+                                <span class="text-slate-300">Target Baku Desa:</span>
+                                <span class="font-bold font-mono text-white">Rp {{ number_format($stats['target_amount'], 0, ',', '.') }}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-b border-white/5">
+                                <span class="text-slate-300">Realisasi Kas Diterima:</span>
+                                <span class="font-bold font-mono text-emerald-400 text-sm">Rp {{ number_format($stats['realization_amount'], 0, ',', '.') }}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1">
+                                <span class="text-slate-300">Lembar SPPT Terbayar:</span>
+                                <span class="font-bold text-white">{{ $stats['total_paid_sppts'] }} <span class="text-slate-400 font-normal">/ {{ $stats['total_sppts'] }} lembar</span></span>
+                            </div>
                         </div>
-                        <div class="bg-white/10 backdrop-blur-md border border-white/15 p-3.5 rounded-2xl text-white">
-                            <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Capaian Realisasi</p>
-                            <p class="text-xl font-extrabold font-mono text-emerald-400 mt-0.5">{{ $stats['realization_percent'] }}%</p>
-                            <p class="text-[10px] text-slate-400">{{ $stats['total_paid_sppts'] }} SPPT Terbayar</p>
-                        </div>
-                    </div>
 
+                        <!-- Progress Bar Capaian -->
+                        <div class="space-y-2 pt-2">
+                            <div class="flex justify-between text-xs font-semibold">
+                                <span class="text-slate-300">Persentase Realisasi Kas</span>
+                                <span class="text-emerald-400 font-mono font-bold">{{ $stats['realization_percent'] }}%</span>
+                            </div>
+                            <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden p-0.5 border border-white/10">
+                                <div class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full transition-all duration-700" style="width: {{ min(100, $stats['realization_percent']) }}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Cepat Navigasi -->
+                        <div class="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                            <a href="#transparansi" class="text-emerald-300 hover:text-white font-medium transition flex items-center gap-1">
+                                <span>Rincian Per Dusun &darr;</span>
+                            </a>
+                            <a href="#verifikasi" class="text-slate-300 hover:text-white font-medium transition flex items-center gap-1">
+                                <span>Verifikasi Kuitansi &darr;</span>
+                            </a>
+                        </div>
+
+                    </div>
                 </div>
 
             </div>
