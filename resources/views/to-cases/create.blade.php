@@ -42,30 +42,89 @@
     @endif
 
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
-        <form action="{{ route('to-cases.store') }}" method="POST" class="space-y-6">
+        <form action="{{ route('to-cases.store') }}" method="POST" class="space-y-6"
+              x-data="{
+                  nopQuery: '{{ old('nop', $selectedObject ? $selectedObject->formatted_nop : '') }}',
+                  suggestions: [],
+                  loading: false,
+                  selectedObj: {{ $selectedObject ? json_encode([
+                      'formatted_nop' => $selectedObject->formatted_nop,
+                      'taxpayer_name' => $selectedObject->taxpayer->name,
+                      'dusun' => $selectedObject->dusunRelation?->name ?? $selectedObject->dusun ?? '-',
+                      'address' => $selectedObject->formatted_address,
+                  ]) : 'null' }},
+                  searchNop() {
+                      if (this.nopQuery.length < 2) {
+                          this.suggestions = [];
+                          return;
+                      }
+                      this.loading = true;
+                      fetch('{{ route('api.tax-objects.search') }}?q=' + encodeURIComponent(this.nopQuery))
+                          .then(res => res.json())
+                          .then(data => {
+                              this.suggestions = data;
+                              this.loading = false;
+                          })
+                          .catch(() => {
+                              this.loading = false;
+                          });
+                  },
+                  selectItem(item) {
+                      this.nopQuery = item.nop;
+                      this.selectedObj = item;
+                      this.suggestions = [];
+                  }
+              }">
             @csrf
 
             @if($selectedSppt)
                 <input type="hidden" name="sppt_id" value="{{ $selectedSppt->id }}">
             @endif
 
-            <!-- Input NOP -->
-            <div>
+            <!-- Input NOP dengan Autocomplete -->
+            <div class="relative">
                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Nomor Objek Pajak (NOP) <span class="text-rose-500">*</span>
+                    Nomor Objek Pajak (NOP) atau Nama Wajib Pajak <span class="text-rose-500">*</span>
                 </label>
-                <input type="text" name="nop" required 
-                       value="{{ old('nop', $selectedObject ? $selectedObject->formatted_nop : '') }}"
-                       placeholder="Contoh: 32.12.050.001.001-0001.0"
-                       class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
-                @if($selectedObject)
-                    <div class="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-0.5">
-                        <p class="font-bold text-slate-800">Subjek Terdaftar: {{ $selectedObject->taxpayer->name }}</p>
-                        <p class="text-slate-600">Alamat Objek: {{ $selectedObject->formatted_address }}</p>
+                <div class="relative">
+                    <input type="text" name="nop" required 
+                           x-model="nopQuery"
+                           @input.debounce.300ms="searchNop()"
+                           placeholder="Ketik NOP atau Nama Wajib Pajak..."
+                           autocomplete="off"
+                           class="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-rose-500 focus:border-rose-500">
+                    <div x-show="loading" class="absolute right-3 top-3 text-xs text-slate-400">
+                        <svg class="animate-spin w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
                     </div>
-                @else
-                    <p class="text-[11px] text-slate-500 mt-1">Masukkan 18 digit NOP atau format resmi berspasi/titik.</p>
-                @endif
+                </div>
+
+                <!-- Dropdown Saran -->
+                <div x-show="suggestions.length > 0" 
+                     @click.outside="suggestions = []"
+                     x-cloak
+                     class="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto divide-y divide-slate-100">
+                    <template x-for="item in suggestions" :key="item.id">
+                        <div @click="selectItem(item)" class="p-3 hover:bg-slate-50 cursor-pointer transition">
+                            <div class="flex items-center justify-between">
+                                <span class="font-mono font-bold text-slate-800 text-xs" x-text="item.formatted_nop"></span>
+                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full" 
+                                      :class="item.is_to ? 'bg-rose-100 text-rose-800' : (item.is_inactive ? 'bg-slate-100 text-slate-700' : 'bg-emerald-100 text-emerald-800')"
+                                      x-text="item.status.toUpperCase()"></span>
+                            </div>
+                            <div class="text-xs font-semibold text-emerald-800 mt-0.5" x-text="item.taxpayer_name"></div>
+                            <div class="text-[11px] text-slate-500 flex items-center justify-between mt-0.5">
+                                <span x-text="item.dusun"></span>
+                                <span class="font-mono text-slate-700" x-text="'Tagihan: Rp ' + new Intl.NumberFormat('id-ID').format(item.active_bill)"></span>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Preview Objek Terpilih -->
+                <div x-show="selectedObj" x-cloak class="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
+                    <p class="font-bold text-slate-800">Wajib Pajak: <span class="text-emerald-800" x-text="selectedObj?.taxpayer_name"></span></p>
+                    <p class="text-slate-600">Wilayah / Dusun: <span class="font-semibold text-slate-700" x-text="selectedObj?.dusun"></span> &bull; <span x-text="selectedObj?.address"></span></p>
+                </div>
             </div>
 
             <!-- Kategori Alasan TO -->

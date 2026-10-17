@@ -197,7 +197,7 @@ class ToAndMutationTest extends TestCase
         $res->assertStatus(403);
     }
 
-    public function test_admin_approves_mutation_which_transfers_ownership_and_unblocks_sppt()
+    public function test_admin_approves_mutation_which_unblocks_sppt_and_records_for_bapenda_reporting()
     {
         // Set object and SPPT to TO
         $this->taxObject->update(['status' => 'to']);
@@ -234,8 +234,8 @@ class ToAndMutationTest extends TestCase
         $this->assertTrue($mutation->fresh()->isApproved());
         $this->assertEquals($this->admin->id, $mutation->fresh()->approved_by_user_id);
 
-        // Check ownership transferred and object unblocked
-        $this->assertEquals($this->newWp->id, $this->taxObject->fresh()->taxpayer_id);
+        // Check ownership record retained for current tax year and object unblocked
+        $this->assertEquals($this->oldWp->id, $this->taxObject->fresh()->taxpayer_id);
         $this->assertEquals('normal', $this->taxObject->fresh()->status);
 
         // Check SPPT unblocked and ready for payment

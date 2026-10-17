@@ -135,6 +135,7 @@
                         <th class="px-6 py-3.5 text-right">Terbayar (Rp)</th>
                         <th class="px-6 py-3.5 text-right">Sisa Tagihan (Rp)</th>
                         <th class="px-6 py-3.5 text-center">Status</th>
+                        <th class="px-6 py-3.5 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -149,7 +150,7 @@
                             <div class="text-[11px] text-slate-400 font-mono">{{ $item->taxObject->taxpayer?->nik ?? '' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-slate-600">
-                            {{ $item->taxObject->dusun ?? '-' }}
+                            {{ $item->taxObject->dusunRelation?->name ?? $item->taxObject->dusun ?? '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right font-mono font-semibold text-slate-900">
                             Rp {{ number_format($item->pbb_terutang, 0, ',', '.') }}
@@ -179,10 +180,31 @@
                             </span>
                             @endif
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="inline-flex items-center gap-2">
+                                <a href="{{ route('tax-objects.show', $item->taxObject) }}" class="inline-flex items-center text-xs font-semibold text-slate-600 hover:text-slate-900 p-1 rounded hover:bg-slate-100" title="Detail Objek">
+                                    Detail
+                                </a>
+                                @if(auth()->user()->isAdmin())
+                                <a href="{{ route('sppts.edit', $item) }}" class="inline-flex items-center text-xs font-semibold text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50" title="Edit Ketetapan SPPT">
+                                    Edit
+                                </a>
+                                @if($item->payments()->count() === 0)
+                                <form action="{{ route('sppts.destroy', $item) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ketetapan SPPT ini secara permanen?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center text-xs font-semibold text-rose-600 hover:text-rose-800 p-1 rounded hover:bg-rose-50" title="Hapus SPPT">
+                                        Hapus
+                                    </button>
+                                </form>
+                                @endif
+                                @endif
+                            </div>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-slate-400">
+                        <td colspan="8" class="px-6 py-8 text-center text-slate-400">
                             Belum ada data ketetapan SPPT untuk tahun pajak {{ $selectedYear }}.
                         </td>
                     </tr>

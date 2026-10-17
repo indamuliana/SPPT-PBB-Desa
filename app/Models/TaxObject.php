@@ -21,6 +21,8 @@ class TaxObject extends Model
         'dusun',
         'dusun_id',
         'status',
+        'deactivation_reason',
+        'deactivation_notes',
         'notes',
     ];
 
@@ -54,14 +56,32 @@ class TaxObject extends Model
         return $this->hasMany(SpptMutation::class);
     }
 
-    public function spptForYear(int $year): HasOne
+    public function spptForYear(?int $year = null): HasOne
     {
+        $year = $year ?? (Village::current()?->active_tax_year ?? (int)date('Y'));
         return $this->hasOne(Sppt::class)->where('tax_year', $year);
     }
 
     public function isTo(): bool
     {
         return $this->status === 'to';
+    }
+
+    public function isInactive(): bool
+    {
+        return $this->status === 'inactive';
+    }
+
+    public function getDeactivationReasonLabelAttribute(): ?string
+    {
+        return match ($this->deactivation_reason) {
+            'mutasi' => 'Telah Dimutasi / Balik Nama',
+            'pecah' => 'Objek Dipecah / Dimekarkan',
+            'to' => 'Tanpa Objek (TO)',
+            'hilang' => 'Hilang / Tidak Ditemukan',
+            'lainnya' => 'Alasan Lainnya',
+            default => $this->deactivation_reason ? ucfirst($this->deactivation_reason) : null,
+        };
     }
 
     public function getFormattedNopAttribute(): string

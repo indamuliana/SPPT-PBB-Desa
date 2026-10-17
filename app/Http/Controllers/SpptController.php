@@ -328,4 +328,69 @@ class SpptController extends Controller
         return redirect()->route('sppts.index', ['year' => $sppt->tax_year])
             ->with('success', "Perekaman SPPT Terpadu NOP {$sppt->taxObject->formatted_nop} berhasil disimpan! Tagihan terhitung: Rp " . number_format($sppt->total_bill, 0, ',', '.'));
     }
+
+    public function edit(Sppt $sppt): View
+    {
+        $sppt->load(['taxObject.taxpayer', 'taxObject.dusunRelation', 'payments']);
+        return view('sppts.edit', compact('sppt'));
+    }
+
+    public function update(Request $request, Sppt $sppt): RedirectResponse
+    {
+        $validated = $request->validate([
+            'pbb_terutang' => ['required', 'numeric', 'min:0'],
+            'due_date' => ['nullable', 'date'],
+            'dhkp_row_ref' => ['nullable', 'string', 'max:50'],
+            'njoptkp' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $newBill = (float)$validated['pbb_terutang'];
+
+        if ((float)$sppt->paid_amount > $newBill) {
+            return back()->withInput()->withErrors([
+                'pbb_terutang' => 'Nominal tagihan baru (Rp ' . number_format($newBill, 0, ',', '.') . ') tidak boleh lebih kecil dari jumlah cicilan yang telah dibayar (Rp ' . number_format($sppt->paid_amount, 0, ',', '.') . ').'
+            ]);
+        }
+
+        $oldValues = $sppt->only(['pbb_terutang', 'total_bill', 'due_date', 'dhkp_row_ref', 'njoptkp']);
+
+        $sppt->pbb_terutang = $newBill;
+        $sppt->total_bill = $newBill;
+        $sppt->due_date = $validated['due_date'] ?? $sppt->due_date;
+        $sppt->dhkp_row_ref = $validated['dhkp_row_ref'] ?? null;
+        if (isset($validated['njoptkp'])) {
+            $sppt->njoptkp = (float)$validated['njoptkp'];
+        }
+
+        $sppt->recalculateStatus();
+        $sppt->save();
+
+        AuditLog::log(
+            'update',
+            "Memperbarui SPPT NOP {$sppt->taxObject->formatted_nop} Tahun {$sppt->tax_year} (Tagihan: Rp " . number_format($newBill, 0, ',', '.') . ")",
+            $sppt,
+            $oldValues,
+            $sppt->only(['pbb_terutang', 'total_bill', 'due_date', 'dhkp_row_ref', 'njoptkp'])
+        );
+
+        return redirect()->route('sppts.index', ['year' => $sppt->tax_year])
+            ->with('success', "Data SPPT NOP {$sppt->taxObject->formatted_nop} Tahun {$sppt->tax_year} berhasil diperbarui.");
+    }
+
+    public function destroy(Sppt $sppt): RedirectResponse
+    {
+        if ($sppt->payments()->exists()) {
+            return back()->with('error', "SPPT NOP {$sppt->taxObject->formatted_nop} Tahun {$sppt->tax_year} tidak dapat dihapus karena sudah memiliki riwayat pembayaran di kasir.");
+        }
+
+        $formattedNop = $sppt->taxObject->formatted_nop;
+        $taxYear = $sppt->tax_year;
+
+        $sppt->delete();
+
+        AuditLog::log('delete', "Menghapus ketetapan SPPT NOP {$formattedNop} Tahun {$taxYear}", null);
+
+        return redirect()->route('sppts.index', ['year' => $taxYear])
+            ->with('success', "Ketetapan SPPT NOP {$formattedNop} Tahun {$taxYear} berhasil dihapus permanen.");
+    }
 }

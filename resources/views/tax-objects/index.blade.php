@@ -78,7 +78,11 @@
                             {{ $op->dusunRelation?->name ?? $op->dusun ?? '-' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            @if($op->isTo())
+                            @if($op->isInactive())
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                                Nonaktif
+                            </span>
+                            @elseif($op->isTo())
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
                                 <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
                                 Tanpa Objek (TO)
@@ -89,13 +93,18 @@
                             </span>
                             @endif
                         </td>
-                        @if(auth()->user()->isAdmin())
                         <td class="px-6 py-4 whitespace-nowrap text-right">
-                            <a href="{{ route('tax-objects.edit', $op) }}" class="inline-flex items-center text-xs font-semibold text-emerald-600 hover:text-emerald-700 p-1 rounded hover:bg-emerald-50">
-                                Edit
-                            </a>
+                            <div class="inline-flex items-center gap-2">
+                                <a href="{{ route('tax-objects.show', $op) }}" class="inline-flex items-center text-xs font-semibold text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50" title="Lihat Detail Lengkap">
+                                    Detail
+                                </a>
+                                @if(auth()->user()->isAdmin())
+                                <a href="{{ route('tax-objects.edit', $op) }}" class="inline-flex items-center text-xs font-semibold text-emerald-600 hover:text-emerald-700 p-1 rounded hover:bg-emerald-50" title="Edit Objek">
+                                    Edit
+                                </a>
+                                @endif
+                            </div>
                         </td>
-                        @endif
                     </tr>
                     @empty
                     <tr>

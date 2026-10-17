@@ -89,29 +89,19 @@ class ComponentSplitTest extends TestCase
         $approveResponse = $this->actingAs($admin)->post(route('mutations.approve', $mutation));
         $approveResponse->assertRedirect();
 
-        // 3. Verify source component was reduced (500 - 200 = 300)
-        $compBumi->refresh();
-        $this->assertEquals(300, (float)$compBumi->area_m2);
-        $this->assertEquals(30000000, (float)$compBumi->total_njop);
-
-        // 4. Verify target TaxObject was created with 200 m2 component
+        // 3. Verify mutation is approved for Bapenda reporting
         $mutation->refresh();
-        $this->assertNotNull($mutation->target_tax_object_id);
-        $targetObject = TaxObject::find($mutation->target_tax_object_id);
-        $this->assertEquals($wp2->id, $targetObject->taxpayer_id);
+        $this->assertTrue($mutation->isApproved());
+        $this->assertEquals($admin->id, $mutation->approved_by_user_id);
+        $this->assertNotNull($mutation->approved_at);
 
-        $targetComp = TaxObjectComponent::where('tax_object_id', $targetObject->id)->where('type', 'bumi')->first();
-        $this->assertNotNull($targetComp);
-        $this->assertEquals(200, (float)$targetComp->area_m2);
-        $this->assertEquals(20000000, (float)$targetComp->total_njop);
+        // 4. Per village authority rules, current year SPPT & components remain unchanged until Bapenda issues new SPPT next year
+        $compBumi->refresh();
+        $this->assertEquals(500, (float)$compBumi->area_m2);
+        $this->assertEquals(50000000, (float)$compBumi->total_njop);
 
-        // 5. Verify SPPT recalculated for both
         $sourceSppt = Sppt::where('tax_object_id', $obj1->id)->where('tax_year', 2026)->first();
-        $this->assertEquals(30000000, (float)$sourceSppt->njop_dasar);
-        $this->assertEquals(20000, (float)$sourceSppt->total_bill); // (30.000.000 - 10.000.000) * 0.1% = 20.000
-
-        $targetSppt = Sppt::where('tax_object_id', $targetObject->id)->where('tax_year', 2026)->first();
-        $this->assertEquals(20000000, (float)$targetSppt->njop_dasar);
-        $this->assertEquals(10000, (float)$targetSppt->total_bill); // (20.000.000 - 10.000.000) * 0.1% = 10.000
+        $this->assertEquals(50000000, (float)$sourceSppt->njop_dasar);
+        $this->assertEquals(40000, (float)$sourceSppt->total_bill);
     }
 }
