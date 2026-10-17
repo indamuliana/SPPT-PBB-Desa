@@ -109,16 +109,16 @@
                 </h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Card 1: Logo Desa -->
+                    <!-- Card 1: Logo Aplikasi / Desa -->
                     <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50/50 space-y-3">
                         <div class="flex items-center justify-between">
-                            <label class="block text-xs font-bold text-slate-800">Logo Resmi Desa</label>
+                            <label class="block text-xs font-bold text-slate-800">Logo Aplikasi / Desa</label>
                             <span class="text-[10px] text-slate-400">PNG / JPG / SVG (Maks. 2MB)</span>
                         </div>
                         <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
+                            <div class="w-20 h-16 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
                                 <template x-if="desaPreview">
-                                    <img :src="desaPreview" alt="Logo Desa" class="w-full h-full object-contain">
+                                    <img :src="desaPreview" alt="Logo Aplikasi" class="max-h-full max-w-full w-auto h-auto object-contain">
                                 </template>
                                 <template x-if="!desaPreview">
                                     <span class="text-[10px] text-slate-400 font-bold text-center leading-tight">Belum Ada Logo</span>
@@ -129,13 +129,13 @@
                                 @if($village->logo_path)
                                 <label class="inline-flex items-center gap-1.5 cursor-pointer text-xs text-rose-600 hover:text-rose-700">
                                     <input type="checkbox" name="remove_logo_desa" value="1" class="rounded border-slate-300 text-rose-600 focus:ring-rose-500">
-                                    <span>Hapus Logo Desa Saat Ini</span>
+                                    <span>Hapus Logo Aplikasi / Desa Saat Ini</span>
                                 </label>
                                 @endif
                             </div>
                         </div>
                         <p class="text-[11px] text-slate-500 leading-relaxed">
-                            Ditampilkan pada navigasi publik, kop surat kuitansi bukti pembayaran PBB, dan dokumen resmi desa.
+                            Ditampilkan sebagai logo aplikasi di sisi kanan kop kuitansi bukti pembayaran PBB, navigasi portal publik, dan dokumen resmi desa.
                         </p>
                         @error('logo_desa')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
                     </div>
@@ -147,9 +147,9 @@
                             <span class="text-[10px] text-slate-400">PNG / JPG / SVG (Maks. 2MB)</span>
                         </div>
                         <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
+                            <div class="w-20 h-16 rounded-xl border border-slate-200 bg-white flex items-center justify-center p-1.5 shrink-0 overflow-hidden shadow-2xs">
                                 <template x-if="regencyPreview">
-                                    <img :src="regencyPreview" alt="Logo Kabupaten" class="w-full h-full object-contain">
+                                    <img :src="regencyPreview" alt="Logo Kabupaten" class="max-h-full max-w-full w-auto h-auto object-contain">
                                 </template>
                                 <template x-if="!regencyPreview">
                                     <span class="text-[10px] text-slate-400 font-bold text-center leading-tight">Belum Ada Logo</span>
@@ -166,7 +166,7 @@
                             </div>
                         </div>
                         <p class="text-[11px] text-slate-500 leading-relaxed">
-                            Lambang resmi Pemkab/Pemkot untuk kop kuitansi tanda terima sah dan laporan rekonsiliasi kas daerah.
+                            Lambang resmi Pemkab/Pemkot untuk sisi kiri kop kuitansi tanda terima sah dan laporan rekonsiliasi kas daerah.
                         </p>
                         @error('logo_kabupaten')<p class="text-xs text-rose-500">{{ $message }}</p>@enderror
                     </div>

@@ -6,12 +6,38 @@
     <title>Kuitansi {{ $payment->receipt_number }} - {{ $village->name }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        .kop-logo {
+            max-height: 48px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+        }
+        .kop-logo-regency {
+            max-width: 90px;
+        }
+        .kop-logo-app {
+            max-width: 120px;
+        }
         @media print {
             .no-print { display: none !important; }
             body { background: white !important; padding: 0 !important; }
             @page {
                 size: A4 portrait;
                 margin: 6mm;
+            }
+            .kop-logo {
+                max-height: 48px !important;
+                width: auto !important;
+                height: auto !important;
+                object-fit: contain !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .kop-logo-regency {
+                max-width: 90px !important;
+            }
+            .kop-logo-app {
+                max-width: 120px !important;
             }
         }
         .cut-line {
@@ -76,7 +102,7 @@
                 <div class="flex items-center gap-3">
                     <!-- Logo Kabupaten di Kiri -->
                     @if($village->regency_logo_url)
-                        <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="w-12 h-12 object-contain shrink-0">
+                        <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="kop-logo kop-logo-regency shrink-0" style="max-height: 48px; max-width: 90px; width: auto; height: auto; object-fit: contain;">
                     @else
                         <div class="w-11 h-11 rounded-xl bg-slate-100 border border-slate-300 flex flex-col items-center justify-center font-bold text-slate-700 text-[10px] shrink-0 leading-tight text-center p-1">
                             <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -95,8 +121,12 @@
                         </span>
                         <p class="font-mono text-[11px] font-bold text-slate-800 mt-1">{{ $payment->receipt_number }}</p>
                     </div>
-                    <!-- Logo Aplikasi di Kanan -->
-                    <img src="{{ asset('images/logo-sadaya.svg') }}" alt="Logo SADAYA PBB" class="w-12 h-12 object-contain shrink-0" title="Aplikasi SADAYA PBB">
+                    <!-- Logo Aplikasi di Kanan (Gambar dari Identitas Desa) -->
+                    @if($village->logo_url)
+                        <img src="{{ $village->logo_url }}" alt="Logo Aplikasi" class="kop-logo kop-logo-app shrink-0" style="max-height: 48px; max-width: 120px; width: auto; height: auto; object-fit: contain;" title="Logo Aplikasi">
+                    @else
+                        <img src="{{ asset('images/logo-sadaya.svg') }}" alt="Logo SADAYA PBB" class="kop-logo kop-logo-app shrink-0" style="max-height: 48px; max-width: 120px; width: auto; height: auto; object-fit: contain;" title="Aplikasi SADAYA PBB">
+                    @endif
                 </div>
             </div>
 
@@ -179,7 +209,7 @@
                 <div class="flex items-center gap-3">
                     <!-- Logo Kabupaten di Kiri -->
                     @if($village->regency_logo_url)
-                        <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="w-12 h-12 object-contain shrink-0">
+                        <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="kop-logo kop-logo-regency shrink-0" style="max-height: 48px; max-width: 90px; width: auto; height: auto; object-fit: contain;">
                     @else
                         <div class="w-11 h-11 rounded-xl bg-slate-100 border border-slate-300 flex flex-col items-center justify-center font-bold text-slate-700 text-[10px] shrink-0 leading-tight text-center p-1">
                             <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -198,8 +228,12 @@
                         </span>
                         <p class="font-mono text-[11px] font-bold text-slate-800 mt-1">{{ $payment->receipt_number }}</p>
                     </div>
-                    <!-- Logo Aplikasi di Kanan -->
-                    <img src="{{ asset('images/logo-sadaya.svg') }}" alt="Logo SADAYA PBB" class="w-12 h-12 object-contain shrink-0" title="Aplikasi SADAYA PBB">
+                    <!-- Logo Aplikasi di Kanan (Gambar dari Identitas Desa) -->
+                    @if($village->logo_url)
+                        <img src="{{ $village->logo_url }}" alt="Logo Aplikasi" class="kop-logo kop-logo-app shrink-0" style="max-height: 48px; max-width: 120px; width: auto; height: auto; object-fit: contain;" title="Logo Aplikasi">
+                    @else
+                        <img src="{{ asset('images/logo-sadaya.svg') }}" alt="Logo SADAYA PBB" class="kop-logo kop-logo-app shrink-0" style="max-height: 48px; max-width: 120px; width: auto; height: auto; object-fit: contain;" title="Aplikasi SADAYA PBB">
+                    @endif
                 </div>
             </div>
 

@@ -187,23 +187,42 @@ class PaymentAndReceiptTest extends TestCase
 
     public function test_receipt_can_be_rendered_in_a4_and_thermal_formats(): void
     {
-        $this->actingAs($this->kadus)->post('/payments', [
-            'sppt_id' => $this->spptNormal->id,
-            'amount_principal' => 125000,
-        ]);
+        $testRegencyLogo = public_path('images/uploads/test_regency.png');
+        $testAppLogo = public_path('images/uploads/test_app.png');
+        @file_put_contents($testRegencyLogo, 'test');
+        @file_put_contents($testAppLogo, 'test');
 
-        $payment = Payment::where('sppt_id', $this->spptNormal->id)->first();
+        try {
+            $village = Village::current();
+            $village->update([
+                'logo_path' => 'images/uploads/test_app.png',
+                'regency_logo_path' => 'images/uploads/test_regency.png',
+            ]);
 
-        // A4 format
-        $responseA4 = $this->actingAs($this->kadus)->get("/payments/{$payment->id}/receipt?format=a4");
-        $responseA4->assertStatus(200);
-        $responseA4->assertSee('LEMBAR WAJIB PAJAK');
-        $responseA4->assertSee('LEMBAR ARSIP PEMERINTAH DESA');
+            $this->actingAs($this->kadus)->post('/payments', [
+                'sppt_id' => $this->spptNormal->id,
+                'amount_principal' => 125000,
+            ]);
 
-        // Thermal format
-        $responseThermal = $this->actingAs($this->kadus)->get("/payments/{$payment->id}/receipt?format=thermal");
-        $responseThermal->assertStatus(200);
-        $responseThermal->assertSee('*** LUNAS ***');
+            $payment = Payment::where('sppt_id', $this->spptNormal->id)->first();
+
+            // A4 format
+            $responseA4 = $this->actingAs($this->kadus)->get("/payments/{$payment->id}/receipt?format=a4");
+            $responseA4->assertStatus(200);
+            $responseA4->assertSee('LEMBAR WAJIB PAJAK');
+            $responseA4->assertSee('LEMBAR ARSIP PEMERINTAH DESA');
+            $responseA4->assertSee('test_regency.png');
+            $responseA4->assertSee('test_app.png');
+            $responseA4->assertSee('kop-logo');
+
+            // Thermal format
+            $responseThermal = $this->actingAs($this->kadus)->get("/payments/{$payment->id}/receipt?format=thermal");
+            $responseThermal->assertStatus(200);
+            $responseThermal->assertSee('*** LUNAS ***');
+        } finally {
+            @unlink($testRegencyLogo);
+            @unlink($testAppLogo);
+        }
     }
 
     public function test_public_qr_verification_endpoint(): void
