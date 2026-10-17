@@ -144,6 +144,73 @@ class DusunManagementTest extends TestCase
         $this->assertDatabaseHas('dusuns', ['id' => $dusun->id]);
     }
 
+    public function test_admin_can_delete_clean_dusun(): void
+    {
+        $dusun = Dusun::create(['name' => 'Dusun Kosong']);
+        $dusun->users()->sync([$this->kadus1->id]);
+
+        $response = $this->actingAs($this->admin)->delete(route('dusuns.destroy', $dusun));
+        $response->assertRedirect(route('dusuns.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('dusuns', ['id' => $dusun->id]);
+        $this->assertDatabaseMissing('dusun_user', ['dusun_id' => $dusun->id]);
+    }
+
+    public function test_admin_can_delete_dusun_with_tax_objects_by_reassigning(): void
+    {
+        $dusunOld = Dusun::create(['name' => 'Dusun Gusuran']);
+        $dusunTarget = Dusun::create(['name' => 'Dusun Penampung']);
+        $taxpayer = Taxpayer::create(['name' => 'Warga Pindahan']);
+
+        $obj = TaxObject::create([
+            'nop' => '321205000100888880',
+            'taxpayer_id' => $taxpayer->id,
+            'dusun_id' => $dusunOld->id,
+            'dusun' => $dusunOld->name,
+            'status' => 'normal',
+        ]);
+
+        $response = $this->actingAs($this->admin)->delete(route('dusuns.destroy', $dusunOld), [
+            'action_on_objects' => 'reassign',
+            'target_dusun_id' => $dusunTarget->id,
+        ]);
+
+        $response->assertRedirect(route('dusuns.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('dusuns', ['id' => $dusunOld->id]);
+        $obj->refresh();
+        $this->assertEquals($dusunTarget->id, $obj->dusun_id);
+        $this->assertEquals($dusunTarget->name, $obj->dusun);
+    }
+
+    public function test_admin_can_delete_dusun_with_tax_objects_by_detaching(): void
+    {
+        $dusun = Dusun::create(['name' => 'Dusun Dihapus']);
+        $taxpayer = Taxpayer::create(['name' => 'Warga Mandiri']);
+
+        $obj = TaxObject::create([
+            'nop' => '321205000100888881',
+            'taxpayer_id' => $taxpayer->id,
+            'dusun_id' => $dusun->id,
+            'dusun' => $dusun->name,
+            'status' => 'normal',
+        ]);
+
+        $response = $this->actingAs($this->admin)->delete(route('dusuns.destroy', $dusun), [
+            'action_on_objects' => 'detach',
+        ]);
+
+        $response->assertRedirect(route('dusuns.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('dusuns', ['id' => $dusun->id]);
+        $obj->refresh();
+        $this->assertNull($obj->dusun_id);
+        $this->assertNull($obj->dusun);
+    }
+
     public function test_pos_smart_filtering_for_assigned_kadus(): void
     {
         $dusun1 = Dusun::create(['name' => 'Dusun Binaan']);

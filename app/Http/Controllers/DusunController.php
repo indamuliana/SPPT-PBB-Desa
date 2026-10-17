@@ -21,7 +21,9 @@ class DusunController extends Controller
         ->orderBy('name')
         ->paginate(15);
 
-        return view('dusuns.index', compact('dusuns'));
+        $allDusuns = Dusun::orderBy('name')->get();
+
+        return view('dusuns.index', compact('dusuns', 'allDusuns'));
     }
 
     public function create(): View
@@ -92,14 +94,58 @@ class DusunController extends Controller
         return redirect()->route('dusuns.index')->with('success', "Data Dusun {$dusun->name} berhasil diperbarui.");
     }
 
-    public function destroy(Dusun $dusun): RedirectResponse
+    public function destroy(Request $request, Dusun $dusun): RedirectResponse
     {
         $taxObjectsCount = $dusun->taxObjects()->count();
+        $dusunName = $dusun->name;
+
         if ($taxObjectsCount > 0) {
-            return back()->with('error', "Dusun {$dusun->name} tidak dapat dihapus karena masih terkait dengan {$taxObjectsCount} Objek Pajak (NOP). Silakan pindahkan atau sesuaikan objek pajak terlebih dahulu.");
+            $action = $request->input('action_on_objects');
+
+            if ($action === 'reassign') {
+                $targetDusunId = $request->input('target_dusun_id');
+                $targetDusun = Dusun::where('id', '!=', $dusun->id)->find($targetDusunId);
+
+                if (! $targetDusun) {
+                    return back()->with('error', 'Silakan pilih Dusun pengganti yang valid untuk memindahkan data Objek Pajak.');
+                }
+
+                \Illuminate\Support\Facades\DB::transaction(function () use ($dusun, $targetDusun, $taxObjectsCount, $dusunName) {
+                    \App\Models\TaxObject::where('dusun_id', $dusun->id)
+                        ->orWhere('dusun', $dusun->name)
+                        ->update([
+                            'dusun_id' => $targetDusun->id,
+                            'dusun' => $targetDusun->name,
+                        ]);
+
+                    $dusun->users()->detach();
+                    $dusun->delete();
+
+                    AuditLog::log('delete', "Menghapus Master Dusun: {$dusunName} dan mengalihkan {$taxObjectsCount} NOP ke {$targetDusun->name}", null);
+                });
+
+                return redirect()->route('dusuns.index')->with('success', "Master Dusun {$dusunName} berhasil dihapus. {$taxObjectsCount} Objek Pajak telah dialihkan ke Dusun {$targetDusun->name}.");
+            } elseif ($action === 'detach') {
+                \Illuminate\Support\Facades\DB::transaction(function () use ($dusun, $taxObjectsCount, $dusunName) {
+                    \App\Models\TaxObject::where('dusun_id', $dusun->id)
+                        ->orWhere('dusun', $dusun->name)
+                        ->update([
+                            'dusun_id' => null,
+                            'dusun' => null,
+                        ]);
+
+                    $dusun->users()->detach();
+                    $dusun->delete();
+
+                    AuditLog::log('delete', "Menghapus Master Dusun: {$dusunName} dan melepaskan kaitan {$taxObjectsCount} NOP", null);
+                });
+
+                return redirect()->route('dusuns.index')->with('success', "Master Dusun {$dusunName} berhasil dihapus. {$taxObjectsCount} Objek Pajak kini berstatus tanpa dusun.");
+            } else {
+                return back()->with('error', "Dusun {$dusun->name} tidak dapat dihapus karena masih terkait dengan {$taxObjectsCount} Objek Pajak (NOP). Silakan pilih opsi pindahkan atau sesuaikan objek pajak terlebih dahulu.");
+            }
         }
 
-        $dusunName = $dusun->name;
         $dusun->users()->detach();
         $dusun->delete();
 
