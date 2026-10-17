@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sppt extends Model
 {
@@ -44,6 +45,11 @@ class Sppt extends Model
     public function taxObject(): BelongsTo
     {
         return $this->belongsTo(TaxObject::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function getRemainingBillAttribute(): float

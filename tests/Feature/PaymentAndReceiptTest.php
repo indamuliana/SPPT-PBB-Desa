@@ -95,6 +95,15 @@ class PaymentAndReceiptTest extends TestCase
         $response->assertSee('125.000');
     }
 
+    public function test_cashier_can_select_sppt_from_table_in_pos(): void
+    {
+        $response = $this->actingAs($this->kadus)->get('/pos?selected_sppt_id=' . $this->spptNormal->id);
+        $response->assertStatus(200);
+        $response->assertSee('Haji Sukarna Wiraatmadja');
+        $response->assertSee('125.000');
+        $response->assertSee('Terima Pembayaran & Cetak Kuitansi', false);
+    }
+
     public function test_cashier_can_process_full_payment(): void
     {
         $response = $this->actingAs($this->kadus)->post('/payments', [
