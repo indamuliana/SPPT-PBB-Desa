@@ -1,59 +1,114 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# SADAYA PBB (Sistem Administrasi Data dan Pelayanan Pajak PBB Desa)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi web administrasi dan pengelolaan Pajak Bumi dan Bangunan Perdesaan dan Perkotaan (PBB-P2) tingkat desa. Membantu pemerintah desa dalam pendataan wajib pajak, objek pajak, SPPT, pencatatan pembayaran tunai/cicilan, serah terima kas kasir-kolektor, pencatatan setoran ke bank/Bapenda, mutasi/pemecahan objek, serta pelaporan keuangan real-time.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. **Dashboard & Monitoring Eksekutif**
+   - Realisasi penerimaan PBB (target vs capaian, persentase).
+   - Kas di tangan kolektor, belum disetor, dan tunggakan per dusun/RW.
+   - Grafik capaian bulanan dan peringkat realisasi wilayah.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+2. **Master Data & SPPT Terpadu**
+   - Pendataan Wajib Pajak (NIK, nama, alamat, kontak).
+   - Pendataan Objek Pajak (NOP 18 digit berformat resmi) dengan rincian komponen multi-objek:
+     - Bumi
+     - Bangunan
+     - Bumi Bersama
+     - Bangunan Bersama
+   - Fitur Input Terpadu (Single-Page Form WP + Objek + Komponen + SPPT).
+   - Pengaturan tarif pajak dinamis per desa (persentase) & NJOPTKP.
 
-## Learning Laravel
+3. **Pemecahan & Mutasi Objek Pajak**
+   - Pemecahan komponen objek (misal bumi/bangunan dijual sebagian ke WP lain).
+   - Alur pengajuan dan persetujuan mutasi oleh Admin/Kepala Desa.
+   - Penanganan SPPT Tanpa Objek (TO) dengan berita acara investigasi & kunci transaksi sementara.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+4. **Loket Kasir POS & Penerimaan PBB**
+   - Split-screen POS dengan tabel pencarian SPPT interaktif (cari NOP, nama WP, dusun, status).
+   - Pembayaran lunas atau cicilan bertahap.
+   - Kuitansi pembayaran resmi (format A4 & Thermal 58mm/80mm) dilengkapi QR Code verifikasi publik anti-pemalsuan.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+5. **Arus Kas & Rekonsiliasi 3 Tingkat**
+   - **Tingkat 1 (Kasir/Kadus):** Pengajuan serah terima kas (`handover`) dengan dukungan konfirmasi massal (bulk confirmation).
+   - **Tingkat 2 (Kolektor Desa):** Penerimaan fisik uang, verifikasi selisih kas, dan pencatatan setoran ke Bank/Bapenda.
+   - **Tingkat 3 (Buku Kas Umum / Cashbook):** Ledger kronologis mutasi uang masuk (dari WP) vs uang keluar (setor ke Bank) serta saldo berjalan (*running balance*).
 
-## Laravel Sponsors
+6. **Pusat Laporan & Ekspor**
+   - Laporan Realisasi per Dusun.
+   - Laporan Penerimaan Kasir/Kadus.
+   - Laporan Arus Kas & Rekonsiliasi.
+   - Laporan Mutasi & Kasus TO.
+   - Dukungan cetak printer dan ekspor CSV/Excel.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+---
 
-### Premium Partners
+## Teknologi yang Digunakan
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+- **Backend:** PHP 8.2+, Laravel 11 / 12
+- **Database:** MySQL
+- **Frontend:** Blade, Tailwind CSS v4, Alpine.js, Chart.js
+- **Testing:** PHPUnit (Feature & Unit Tests)
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Panduan Instalasi Lokal
 
-## Code of Conduct
+1. **Clone repositori:**
+   ```bash
+   git clone https://github.com/indamuliana/SPPT-PBB-Desa.git
+   cd SPPT-PBB-Desa
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+2. **Install dependensi PHP & Node:**
+   ```bash
+   composer install
+   npm install && npm run build
+   ```
 
-## Security Vulnerabilities
+3. **Konfigurasi Environment:**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
+   Sesuaikan kredensial database di berkas `.env`:
+   ```env
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=sadaya_pbb
+   DB_USERNAME=root
+   DB_PASSWORD=
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+4. **Migrasi Database & Seeder:**
+   ```bash
+   php artisan migrate --seed
+   ```
 
-## License
+5. **Jalankan Server Lokal:**
+   ```bash
+   php artisan serve
+   ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+6. **Akses Pengguna Bawaan:**
+   - **Admin:** `admin@desa.id` / `password`
+   - **Kolektor:** `kolektor@desa.id` / `password`
+   - **Kasir/Kadus 1:** `kasir1@desa.id` / `password`
+   - **Kepala Desa:** `kades@desa.id` / `password`
+
+---
+
+## Menjalankan Pengujian (Testing)
+
+```bash
+php artisan test
+```
+
+---
+
+## Lisensi
+
+Aplikasi ini dilisensikan di bawah lisensi terbuka [MIT](LICENSE).
