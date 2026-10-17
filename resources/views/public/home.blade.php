@@ -11,7 +11,7 @@
         <!-- Background Foto Kantor Desa Sukahaji & Transparent Overlay -->
         <div class="absolute inset-0 z-0">
             <img 
-                src="{{ asset('images/kantor-desa-sukahaji.png') }}" 
+                src="{{ $village->hero_image_url }}" 
                 alt="Kantor {{ str_starts_with(strtolower($village->name), 'desa') ? $village->name : 'Desa ' . $village->name }}" 
                 class="w-full h-full object-cover object-center transform scale-100"
             >
@@ -26,10 +26,23 @@
                 <!-- Kolom Kiri: Informasi, Headline & Form Cek NOP -->
                 <div class="lg:col-span-7 space-y-6 text-left">
                     
-                    <!-- Badge Status Resmi -->
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/60 border border-emerald-400/40 text-emerald-300 text-xs font-semibold backdrop-blur-sm shadow-md">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>PORTAL RESMI PBB-P2 {{ strtoupper(str_starts_with(strtolower($village->name), 'desa') ? $village->name : 'DESA ' . $village->name) }}</span>
+                    <!-- Logos & Badge Status Resmi -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        @if($village->regency_logo_url)
+                        <div class="h-11 w-11 rounded-xl bg-white/95 p-1 shadow-md flex items-center justify-center backdrop-blur-xs border border-white/20">
+                            <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="max-h-full max-w-full object-contain">
+                        </div>
+                        @endif
+                        @if($village->logo_url)
+                        <div class="h-11 w-11 rounded-xl bg-white/95 p-1 shadow-md flex items-center justify-center backdrop-blur-xs border border-white/20">
+                            <img src="{{ $village->logo_url }}" alt="Logo {{ $village->name }}" class="max-h-full max-w-full object-contain">
+                        </div>
+                        @endif
+
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/60 border border-emerald-400/40 text-emerald-300 text-xs font-semibold backdrop-blur-sm shadow-md">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>PORTAL RESMI PBB-P2 {{ strtoupper(str_starts_with(strtolower($village->name), 'desa') ? $village->name : 'DESA ' . $village->name) }}</span>
+                        </div>
                     </div>
 
                     <!-- Headline Utama -->

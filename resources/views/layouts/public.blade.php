@@ -41,9 +41,15 @@
                 
                 <!-- Logo & Brand Identity -->
                 <a href="{{ route('home') }}" class="flex items-center gap-3.5 group">
-                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 flex items-center justify-center font-black text-white shadow-md shadow-emerald-700/20 group-hover:scale-105 transition transform text-base tracking-wider">
-                        SP
-                    </div>
+                    @if($village->logo_url)
+                        <img src="{{ $village->logo_url }}" alt="Logo {{ $village->name }}" class="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-2xl bg-white p-1 shadow-md shadow-emerald-700/20 group-hover:scale-105 transition transform">
+                    @elseif($village->regency_logo_url)
+                        <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="w-10 h-10 sm:w-11 sm:h-11 object-contain rounded-2xl bg-white p-1 shadow-md shadow-emerald-700/20 group-hover:scale-105 transition transform">
+                    @else
+                        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-emerald-700 via-emerald-600 to-teal-500 flex items-center justify-center font-black text-white shadow-md shadow-emerald-700/20 group-hover:scale-105 transition transform text-base tracking-wider">
+                            SP
+                        </div>
+                    @endif
                     <div>
                         <div class="flex items-center gap-2">
                             <span class="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight leading-none">SADAYA PBB</span>
@@ -128,9 +134,15 @@
                 <!-- Col 1: Profil Desa -->
                 <div class="md:col-span-2 space-y-4">
                     <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-black text-white text-sm">
-                            SP
-                        </div>
+                        @if($village->logo_url)
+                            <img src="{{ $village->logo_url }}" alt="Logo {{ $village->name }}" class="w-10 h-10 object-contain rounded-xl bg-white p-1 shrink-0">
+                        @elseif($village->regency_logo_url)
+                            <img src="{{ $village->regency_logo_url }}" alt="Logo {{ $village->regency }}" class="w-10 h-10 object-contain rounded-xl bg-white p-1 shrink-0">
+                        @else
+                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center font-black text-white text-sm shrink-0">
+                                SP
+                            </div>
+                        @endif
                         <div>
                             <h2 class="font-bold text-white text-sm tracking-tight">SADAYA PBB DESA {{ strtoupper($village->name ?? 'Sukahaji') }}</h2>
                             <p class="text-[11px] text-slate-400">Sistem Administrasi Data Pajak & Pelayanan PBB-P2</p>

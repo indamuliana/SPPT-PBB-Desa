@@ -34,9 +34,16 @@
             <!-- App Brand & Village -->
             <div class="p-5 border-b border-emerald-900/80 flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-white shadow-md shadow-emerald-950/40 text-lg">
-                        SP
-                    </div>
+                    @php $currentVillage = \App\Models\Village::current(); @endphp
+                    @if($currentVillage->logo_url)
+                        <img src="{{ $currentVillage->logo_url }}" alt="Logo Desa" class="w-10 h-10 object-contain rounded-xl bg-white p-1 shadow-md shadow-emerald-950/40">
+                    @elseif($currentVillage->regency_logo_url)
+                        <img src="{{ $currentVillage->regency_logo_url }}" alt="Logo Kabupaten" class="w-10 h-10 object-contain rounded-xl bg-white p-1 shadow-md shadow-emerald-950/40">
+                    @else
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-white shadow-md shadow-emerald-950/40 text-lg">
+                            SP
+                        </div>
+                    @endif
                     <div>
                         <h1 class="font-bold text-base tracking-tight text-white leading-tight">SADAYA PBB</h1>
                         <p class="text-xs text-emerald-300/90 font-medium truncate max-w-[160px]">{{ \App\Models\Village::current()->name }}</p>

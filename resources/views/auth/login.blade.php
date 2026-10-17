@@ -17,9 +17,20 @@
     }">
         <!-- App Logo & Card Header -->
         <div class="text-center mb-6">
-            <div class="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 items-center justify-center font-bold text-white shadow-xl shadow-emerald-500/20 text-2xl mb-3">
-                SP
-            </div>
+            @php $currentVillage = \App\Models\Village::current(); @endphp
+            @if($currentVillage->logo_url)
+                <div class="inline-flex items-center justify-center p-2 rounded-2xl bg-white shadow-xl shadow-emerald-500/20 mb-3">
+                    <img src="{{ $currentVillage->logo_url }}" alt="Logo Desa" class="w-14 h-14 object-contain">
+                </div>
+            @elseif($currentVillage->regency_logo_url)
+                <div class="inline-flex items-center justify-center p-2 rounded-2xl bg-white shadow-xl shadow-emerald-500/20 mb-3">
+                    <img src="{{ $currentVillage->regency_logo_url }}" alt="Logo Kabupaten" class="w-14 h-14 object-contain">
+                </div>
+            @else
+                <div class="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 items-center justify-center font-bold text-white shadow-xl shadow-emerald-500/20 text-2xl mb-3">
+                    SP
+                </div>
+            @endif
             <h1 class="text-2xl font-bold tracking-tight text-white">SADAYA PBB</h1>
             <p class="text-sm text-emerald-300 font-medium">{{ \App\Models\Village::current()->name }} &bull; Tahun Pajak {{ \App\Models\Village::current()->active_tax_year }}</p>
         </div>

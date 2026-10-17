@@ -74,9 +74,15 @@
         <div class="border border-slate-800 p-4 rounded-xl relative">
             <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2.5 mb-3">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">
-                        SP
-                    </div>
+                    @if($village->logo_url)
+                        <img src="{{ $village->logo_url }}" alt="Logo Desa" class="w-9 h-9 object-contain">
+                    @elseif($village->regency_logo_url)
+                        <img src="{{ $village->regency_logo_url }}" alt="Logo Kabupaten" class="w-9 h-9 object-contain">
+                    @else
+                        <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">
+                            SP
+                        </div>
+                    @endif
                     <div>
                         <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 leading-tight">Pemerintah {{ $village->regency }} &bull; {{ $village->district }}</h2>
                         <h1 class="text-sm font-black uppercase text-slate-900 leading-tight">PEMERINTAH {{ $village->name }}</h1>
@@ -167,9 +173,15 @@
         <div class="border border-slate-800 p-4 rounded-xl relative">
             <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2.5 mb-3">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">
-                        SP
-                    </div>
+                    @if($village->logo_url)
+                        <img src="{{ $village->logo_url }}" alt="Logo Desa" class="w-9 h-9 object-contain">
+                    @elseif($village->regency_logo_url)
+                        <img src="{{ $village->regency_logo_url }}" alt="Logo Kabupaten" class="w-9 h-9 object-contain">
+                    @else
+                        <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm">
+                            SP
+                        </div>
+                    @endif
                     <div>
                         <h2 class="text-xs font-bold uppercase tracking-wider text-slate-600 leading-tight">Pemerintah {{ $village->regency }} &bull; {{ $village->district }}</h2>
                         <h1 class="text-sm font-black uppercase text-slate-900 leading-tight">PEMERINTAH {{ $village->name }}</h1>

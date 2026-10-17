@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\User;
 use App\Models\Village;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class AuthAndRoleTest extends TestCase
@@ -163,5 +164,61 @@ class AuthAndRoleTest extends TestCase
             'user_id' => $admin->id,
             'action' => 'update',
         ]);
+    }
+
+    public function test_collector_can_upload_and_remove_logos_and_hero_image(): void
+    {
+        $kolektor = User::factory()->create([
+            'username' => 'kolektor_desa',
+            'role' => 'kolektor',
+            'is_active' => true,
+        ]);
+
+        $logoDesa = UploadedFile::fake()->image('logo_desa.png', 100, 100);
+        $logoKab = UploadedFile::fake()->image('logo_kabupaten.png', 100, 100);
+        $heroImage = UploadedFile::fake()->image('foto_desa.jpg', 1200, 800);
+
+        $response = $this->actingAs($kolektor)->put('/settings/village', [
+            'name' => 'Desa Sukahaji',
+            'district' => 'Kecamatan Patrol',
+            'regency' => 'Kabupaten Indramayu',
+            'province' => 'Jawa Barat',
+            'active_tax_year' => 2026,
+            'target_amount' => 175000000.00,
+            'tax_rate_percent' => 0.100,
+            'logo_desa' => $logoDesa,
+            'logo_kabupaten' => $logoKab,
+            'hero_image' => $heroImage,
+        ]);
+
+        $response->assertRedirect(route('settings.village'));
+        $village = Village::current()->fresh();
+
+        $this->assertNotNull($village->logo_path);
+        $this->assertNotNull($village->regency_logo_path);
+        $this->assertNotNull($village->hero_image_path);
+        $this->assertFileExists(public_path($village->logo_path));
+        $this->assertFileExists(public_path($village->regency_logo_path));
+        $this->assertFileExists(public_path($village->hero_image_path));
+
+        // Test removing the uploaded files
+        $removeResponse = $this->actingAs($kolektor)->put('/settings/village', [
+            'name' => 'Desa Sukahaji',
+            'district' => 'Kecamatan Patrol',
+            'regency' => 'Kabupaten Indramayu',
+            'province' => 'Jawa Barat',
+            'active_tax_year' => 2026,
+            'target_amount' => 175000000.00,
+            'tax_rate_percent' => 0.100,
+            'remove_logo_desa' => 1,
+            'remove_logo_kabupaten' => 1,
+            'remove_hero_image' => 1,
+        ]);
+
+        $removeResponse->assertRedirect(route('settings.village'));
+        $villageFresh = $village->fresh();
+        $this->assertNull($villageFresh->logo_path);
+        $this->assertNull($villageFresh->regency_logo_path);
+        $this->assertNull($villageFresh->hero_image_path);
     }
 }

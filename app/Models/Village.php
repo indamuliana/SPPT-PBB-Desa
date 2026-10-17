@@ -16,11 +16,14 @@ class Village extends Model
         'phone',
         'email',
         'logo_path',
+        'regency_logo_path',
+        'hero_image_path',
         'kades_name',
         'kades_nip',
         'active_tax_year',
         'target_amount',
         'tax_rate_percent',
+        'bank_account_info',
     ];
 
     protected $casts = [
@@ -28,6 +31,39 @@ class Village extends Model
         'target_amount' => 'decimal:2',
         'tax_rate_percent' => 'decimal:3',
     ];
+
+    /**
+     * Get URL for logo desa
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        if ($this->logo_path && file_exists(public_path($this->logo_path))) {
+            return asset($this->logo_path);
+        }
+        return null;
+    }
+
+    /**
+     * Get URL for logo kabupaten
+     */
+    public function getRegencyLogoUrlAttribute(): ?string
+    {
+        if ($this->regency_logo_path && file_exists(public_path($this->regency_logo_path))) {
+            return asset($this->regency_logo_path);
+        }
+        return null;
+    }
+
+    /**
+     * Get URL for hero welcome photo
+     */
+    public function getHeroImageUrlAttribute(): string
+    {
+        if ($this->hero_image_path && file_exists(public_path($this->hero_image_path))) {
+            return asset($this->hero_image_path);
+        }
+        return asset('images/kantor-desa-sukahaji.png');
+    }
 
     /**
      * Helper to get the village profile (single row)
