@@ -246,4 +246,90 @@ class PaymentAndReceiptTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Kuitansi Tidak Ditemukan');
     }
+
+    public function test_cashier_can_quick_edit_taxpayer_taxobject_and_sppt_from_pos(): void
+    {
+        $response = $this->actingAs($this->kadus)->put("/pos/quick-edit/{$this->spptNormal->id}", [
+            'taxpayer_name' => 'Haji Sukarna Wiraatmadja S.E.',
+            'taxpayer_nik' => '3212051203650099',
+            'taxpayer_phone' => '08123456789',
+            'taxpayer_address' => 'Jl. Sindanglaut No. 12',
+            'nop' => '321205000100100099',
+            'object_address' => 'Blok Desa Kidul RT 02 RW 01',
+            'object_rt' => '002',
+            'object_rw' => '001',
+            'bumi_area_m2' => 150,
+            'bumi_njop_per_m2' => 200000,
+            'bangunan_area_m2' => 60,
+            'bangunan_njop_per_m2' => 500000,
+            'pbb_terutang' => 180000,
+            'due_date' => '2026-10-31',
+            'dhkp_row_ref' => 'DHKP-001',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->taxpayer->refresh();
+        $this->assertEquals('Haji Sukarna Wiraatmadja S.E.', $this->taxpayer->name);
+        $this->assertEquals('3212051203650099', $this->taxpayer->nik);
+        $this->assertEquals('08123456789', $this->taxpayer->phone);
+
+        $this->normalOp->refresh();
+        $this->assertEquals('321205000100100099', $this->normalOp->nop);
+        $this->assertEquals('002', $this->normalOp->rt);
+        $this->assertEquals('001', $this->normalOp->rw);
+
+        $this->spptNormal->refresh();
+        $this->assertEquals(180000, $this->spptNormal->pbb_terutang);
+        $this->assertEquals(180000, $this->spptNormal->total_bill);
+        $this->assertEquals('2026-10-31', $this->spptNormal->due_date->format('Y-m-d'));
+        $this->assertEquals('DHKP-001', $this->spptNormal->dhkp_row_ref);
+
+        $this->assertDatabaseHas('tax_object_components', [
+            'tax_object_id' => $this->normalOp->id,
+            'type' => 'bumi',
+            'area_m2' => 150,
+            'njop_per_m2' => 200000,
+            'total_njop' => 30000000,
+        ]);
+        $this->assertDatabaseHas('tax_object_components', [
+            'tax_object_id' => $this->normalOp->id,
+            'type' => 'bangunan',
+            'area_m2' => 60,
+            'njop_per_m2' => 500000,
+            'total_njop' => 30000000,
+        ]);
+    }
+
+    public function test_quick_edit_prevents_lowering_bill_below_paid_amount(): void
+    {
+        $this->spptNormal->update([
+            'paid_amount' => 50000,
+            'status' => 'partial',
+        ]);
+
+        $response = $this->actingAs($this->kadus)->put("/pos/quick-edit/{$this->spptNormal->id}", [
+            'taxpayer_name' => $this->taxpayer->name,
+            'nop' => $this->normalOp->nop,
+            'pbb_terutang' => 30000, // lower than paid_amount (50000)
+        ]);
+
+        $response->assertSessionHas('error');
+        $this->spptNormal->refresh();
+        $this->assertEquals(125000, $this->spptNormal->pbb_terutang);
+    }
+
+    public function test_quick_edit_prevents_duplicate_nop_on_different_tax_object(): void
+    {
+        $response = $this->actingAs($this->kadus)->put("/pos/quick-edit/{$this->spptNormal->id}", [
+            'taxpayer_name' => $this->taxpayer->name,
+            'nop' => $this->toOp->nop, // duplicate with toOp
+            'pbb_terutang' => 125000,
+        ]);
+
+        $response->assertSessionHas('error');
+        $this->normalOp->refresh();
+        $this->assertNotEquals($this->toOp->nop, $this->normalOp->nop);
+    }
 }

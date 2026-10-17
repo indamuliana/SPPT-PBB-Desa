@@ -36,6 +36,7 @@ Route::middleware('auth')->group(function () {
 
     // Loket Kasir POS & Transaksi Pembayaran
     Route::get('/pos', [\App\Http\Controllers\PaymentController::class, 'pos'])->name('payments.pos');
+    Route::put('/pos/quick-edit/{sppt}', [\App\Http\Controllers\PaymentController::class, 'quickEdit'])->name('payments.pos.quick-edit');
     Route::post('/payments', [\App\Http\Controllers\PaymentController::class, 'store'])->name('payments.store');
     Route::get('/payments/history', [\App\Http\Controllers\PaymentController::class, 'history'])->name('payments.history');
     Route::get('/payments/{payment}/receipt', [\App\Http\Controllers\PaymentController::class, 'receipt'])->name('payments.receipt');

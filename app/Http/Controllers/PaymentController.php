@@ -8,6 +8,8 @@ use App\Models\Payment;
 use App\Models\PaymentCancellation;
 use App\Models\Sppt;
 use App\Models\TaxObject;
+use App\Models\TaxObjectComponent;
+use App\Models\Taxpayer;
 use App\Models\Village;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,7 +39,7 @@ class PaymentController extends Controller
         $statusFilter = $request->input('status', 'unpaid');
 
         // 1. Table Query for left panel
-        $tableQuery = Sppt::with(['taxObject.taxpayer', 'taxObject.dusunRelation'])
+        $tableQuery = Sppt::with(['taxObject.taxpayer', 'taxObject.dusunRelation', 'taxObject.components'])
             ->where('tax_year', $village->active_tax_year);
 
         if ($statusFilter === 'unpaid') {
@@ -89,14 +91,14 @@ class PaymentController extends Controller
         $paidHistory = collect();
 
         if ($request->filled('selected_sppt_id')) {
-            $selectedSppt = Sppt::with(['taxObject.taxpayer', 'taxObject.dusunRelation', 'payments.cashier'])->find($request->selected_sppt_id);
+            $selectedSppt = Sppt::with(['taxObject.taxpayer', 'taxObject.dusunRelation', 'taxObject.components', 'payments.cashier'])->find($request->selected_sppt_id);
             if ($selectedSppt) {
                 $taxObject = $selectedSppt->taxObject;
             }
         } elseif ($search) {
             $cleanNop = preg_replace('/[^0-9]/', '', $search);
-            $taxObject = TaxObject::with(['taxpayer', 'dusunRelation', 'sppts' => function ($q) {
-                $q->orderByDesc('tax_year');
+            $taxObject = TaxObject::with(['taxpayer', 'dusunRelation', 'components', 'sppts' => function ($q) {
+                $q->with('taxObject.components')->orderByDesc('tax_year');
             }])
             ->where(function ($q) use ($search, $cleanNop) {
                 if (! empty($cleanNop)) {
@@ -122,6 +124,8 @@ class PaymentController extends Controller
                 ->get();
         }
 
+        $allDusuns = Dusun::orderBy('name')->get();
+
         return view('payments.pos', compact(
             'village', 
             'search', 
@@ -131,6 +135,7 @@ class PaymentController extends Controller
             'statusFilter', 
             'spptList', 
             'dusunList', 
+            'allDusuns',
             'selectedSppt', 
             'taxObject', 
             'unpaidSppts', 
@@ -361,5 +366,153 @@ class PaymentController extends Controller
         AuditLog::log('update', "Menolak pengajuan pembatalan kuitansi #{$payment->receipt_number}. Alasan penolakan: {$request->rejection_reason}", $payment);
 
         return back()->with('success', "Pengajuan pembatalan kuitansi #{$payment->receipt_number} telah ditolak. Transaksi tetap sah.");
+    }
+
+    /**
+     * Koreksi cepat NOP, Wajib Pajak, Komponen, dan Tagihan SPPT langsung dari Loket POS.
+     */
+    public function quickEdit(Request $request, Sppt $sppt): RedirectResponse
+    {
+        $validated = $request->validate([
+            // Taxpayer
+            'taxpayer_name' => ['required', 'string', 'max:255'],
+            'taxpayer_nik' => ['nullable', 'string', 'max:20'],
+            'taxpayer_phone' => ['nullable', 'string', 'max:30'],
+            'taxpayer_address' => ['nullable', 'string'],
+
+            // Tax Object
+            'nop' => ['required', 'string', 'min:10', 'max:25'],
+            'object_address' => ['nullable', 'string'],
+            'object_rt' => ['nullable', 'string', 'max:5'],
+            'object_rw' => ['nullable', 'string', 'max:5'],
+            'dusun_id' => ['nullable', 'exists:dusuns,id'],
+
+            // Components
+            'bumi_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bumi_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+            'bumi_bersama_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bumi_bersama_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_bersama_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_bersama_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+
+            // SPPT
+            'pbb_terutang' => ['required', 'numeric', 'min:0'],
+            'due_date' => ['nullable', 'date'],
+            'dhkp_row_ref' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $cleanNop = preg_replace('/[^0-9]/', '', (string)$validated['nop']);
+        $existingOther = TaxObject::where('nop', $cleanNop)->where('id', '!=', $sppt->tax_object_id)->first();
+        if ($existingOther) {
+            return back()->withInput()->with('error', "NOP {$cleanNop} sudah terdaftar pada Objek Pajak lain.");
+        }
+
+        $newBill = (float)$validated['pbb_terutang'];
+        if ((float)$sppt->paid_amount > $newBill) {
+            return back()->withInput()->with('error', 'Nominal tagihan baru (Rp ' . number_format($newBill, 0, ',', '.') . ') tidak boleh lebih kecil dari cicilan kasir yang telah disetor (Rp ' . number_format($sppt->paid_amount, 0, ',', '.') . ').');
+        }
+
+        DB::transaction(function () use ($sppt, $validated, $cleanNop, $newBill) {
+            $taxObject = $sppt->taxObject;
+            $taxpayer = $taxObject->taxpayer;
+
+            // 1. Update Taxpayer
+            if ($taxpayer) {
+                $cleanNik = ! empty($validated['taxpayer_nik']) ? preg_replace('/[^0-9]/', '', $validated['taxpayer_nik']) : null;
+                $taxpayer->update([
+                    'name' => $validated['taxpayer_name'],
+                    'nik' => $cleanNik,
+                    'phone' => $validated['taxpayer_phone'] ?? $taxpayer->phone,
+                    'address' => $validated['taxpayer_address'] ?? $taxpayer->address,
+                ]);
+            }
+
+            // 2. Update Tax Object
+            $dusunName = null;
+            if (! empty($validated['dusun_id'])) {
+                $dusunName = Dusun::find($validated['dusun_id'])?->name;
+            }
+
+            $taxObject->update([
+                'nop' => $cleanNop,
+                'address' => $validated['object_address'] ?? $taxObject->address,
+                'rt' => $validated['object_rt'] ?? $taxObject->rt,
+                'rw' => $validated['object_rw'] ?? $taxObject->rw,
+                'dusun_id' => $validated['dusun_id'] ?? $taxObject->dusun_id,
+                'dusun' => $dusunName ?? $taxObject->dusun,
+            ]);
+
+            // 3. Update Components if supplied
+            $taxYear = $sppt->tax_year;
+            $components = [
+                'bumi' => [
+                    'area' => $validated['bumi_area_m2'] ?? null,
+                    'njop' => $validated['bumi_njop_per_m2'] ?? null,
+                ],
+                'bangunan' => [
+                    'area' => $validated['bangunan_area_m2'] ?? null,
+                    'njop' => $validated['bangunan_njop_per_m2'] ?? null,
+                ],
+                'bumi_bersama' => [
+                    'area' => $validated['bumi_bersama_area_m2'] ?? null,
+                    'njop' => $validated['bumi_bersama_njop_per_m2'] ?? null,
+                ],
+                'bangunan_bersama' => [
+                    'area' => $validated['bangunan_bersama_area_m2'] ?? null,
+                    'njop' => $validated['bangunan_bersama_njop_per_m2'] ?? null,
+                ],
+            ];
+
+            $totalNjopDasar = 0;
+            foreach ($components as $type => $comp) {
+                if ($comp['area'] !== null || $comp['njop'] !== null) {
+                    $area = (float)($comp['area'] ?? 0);
+                    $njopM2 = (float)($comp['njop'] ?? 0);
+                    $totComp = round($area * $njopM2, 2);
+                    $totalNjopDasar += $totComp;
+
+                    TaxObjectComponent::updateOrCreate(
+                        [
+                            'tax_object_id' => $taxObject->id,
+                            'type' => $type,
+                            'tax_year' => $taxYear,
+                        ],
+                        [
+                            'area_m2' => $area,
+                            'njop_per_m2' => $njopM2,
+                            'total_njop' => $totComp,
+                        ]
+                    );
+                }
+            }
+
+            // 4. Update SPPT
+            $existingFine = (float)$sppt->fine_amount;
+            $sppt->pbb_terutang = $newBill;
+            $sppt->total_bill = $newBill + $existingFine;
+            if ($totalNjopDasar > 0) {
+                $sppt->njop_dasar = $totalNjopDasar;
+                $sppt->njop_perhitungan = max(0, $totalNjopDasar - (float)($sppt->njoptkp ?? 10000000));
+            }
+            if (! empty($validated['due_date'])) {
+                $sppt->due_date = $validated['due_date'];
+            }
+            if (isset($validated['dhkp_row_ref'])) {
+                $sppt->dhkp_row_ref = $validated['dhkp_row_ref'];
+            }
+            $sppt->recalculateStatus();
+            $sppt->save();
+
+            AuditLog::log(
+                'update',
+                "Koreksi data dari loket POS: NOP {$taxObject->formatted_nop} ({$validated['taxpayer_name']}), Tagihan: Rp " . number_format($newBill, 0, ',', '.'),
+                $sppt
+            );
+        });
+
+        return redirect()->route('payments.pos', ['selected_sppt_id' => $sppt->id])
+            ->with('success', "Data Wajib Pajak, Objek Pajak, dan Tagihan SPPT NOP {$sppt->taxObject->formatted_nop} berhasil diperbarui langsung dari loket kasir.");
     }
 }
