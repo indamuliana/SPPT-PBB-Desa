@@ -114,6 +114,68 @@ class TaxMasterAndDhkpTest extends TestCase
         $this->assertStringStartsWith('00.', $saved->formatted_nop);
     }
 
+    public function test_admin_can_create_tax_object_with_components_and_sppt(): void
+    {
+        $wp = Taxpayer::create(['name' => 'H. Endang']);
+
+        $response = $this->actingAs($this->admin)->post('/tax-objects', [
+            'nop' => '321205000100900010',
+            'taxpayer_id' => $wp->id,
+            'address' => 'Jl. Kebon Jeruk',
+            'rt' => '01',
+            'rw' => '02',
+            'status' => 'normal',
+            'include_components' => 1,
+            'tax_year' => 2026,
+            'due_date' => '2026-09-30',
+            'bumi_area_m2' => 200,
+            'bumi_class_code' => 'A35',
+            'bumi_njop_per_m2' => 100000,
+            'bangunan_area_m2' => 50,
+            'bangunan_class_code' => 'B12',
+            'bangunan_njop_per_m2' => 500000,
+            'njoptkp' => 10000000,
+        ]);
+
+        $response->assertRedirect('/tax-objects');
+        $this->assertDatabaseHas('tax_objects', [
+            'nop' => '321205000100900010',
+        ]);
+
+        $taxObject = TaxObject::where('nop', '321205000100900010')->first();
+        $this->assertNotNull($taxObject);
+
+        // Check components created
+        $this->assertDatabaseHas('tax_object_components', [
+            'tax_object_id' => $taxObject->id,
+            'type' => 'bumi',
+            'tax_year' => 2026,
+            'area_m2' => 200,
+            'njop_per_m2' => 100000,
+            'total_njop' => 20000000,
+        ]);
+        $this->assertDatabaseHas('tax_object_components', [
+            'tax_object_id' => $taxObject->id,
+            'type' => 'bangunan',
+            'tax_year' => 2026,
+            'area_m2' => 50,
+            'njop_per_m2' => 500000,
+            'total_njop' => 25000000,
+        ]);
+
+        // Check SPPT created
+        $this->assertDatabaseHas('sppts', [
+            'tax_object_id' => $taxObject->id,
+            'tax_year' => 2026,
+            'njop_dasar' => 45000000,
+            'njoptkp' => 10000000,
+            'njop_perhitungan' => 35000000,
+            'pbb_terutang' => 35000,
+            'total_bill' => 35000,
+            'status' => 'unpaid',
+        ]);
+    }
+
     public function test_admin_can_create_sppt_manually(): void
     {
         $wp = Taxpayer::create(['name' => 'Cecep Kurnia']);

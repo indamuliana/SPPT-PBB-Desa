@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\Dusun;
+use App\Models\Sppt;
 use App\Models\TaxObject;
+use App\Models\TaxObjectComponent;
 use App\Models\Taxpayer;
 use App\Models\Village;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -57,7 +60,8 @@ class TaxObjectController extends Controller
     {
         $taxpayers = Taxpayer::orderBy('name')->get();
         $dusuns = Dusun::orderBy('name')->get();
-        return view('tax-objects.create', compact('taxpayers', 'dusuns'));
+        $village = Village::current();
+        return view('tax-objects.create', compact('taxpayers', 'dusuns', 'village'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -76,18 +80,123 @@ class TaxObjectController extends Controller
             'dusun' => ['nullable', 'string', 'max:50'],
             'status' => ['required', Rule::in(['normal', 'to'])],
             'notes' => ['nullable', 'string'],
+
+            // Optional 4 components & SPPT creation
+            'include_components' => ['nullable', 'boolean'],
+            'tax_year' => ['nullable', 'integer', 'min:2000', 'max:2099'],
+            'due_date' => ['nullable', 'date'],
+            'bumi_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bumi_class_code' => ['nullable', 'string', 'max:10'],
+            'bumi_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_class_code' => ['nullable', 'string', 'max:10'],
+            'bangunan_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+            'bumi_bersama_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bumi_bersama_class_code' => ['nullable', 'string', 'max:10'],
+            'bumi_bersama_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_bersama_area_m2' => ['nullable', 'numeric', 'min:0'],
+            'bangunan_bersama_class_code' => ['nullable', 'string', 'max:10'],
+            'bangunan_bersama_njop_per_m2' => ['nullable', 'numeric', 'min:0'],
+            'njoptkp' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        if (! empty($validated['dusun_id'])) {
-            $dusunObj = Dusun::find($validated['dusun_id']);
-            $validated['dusun'] = $dusunObj?->name ?? $validated['dusun'] ?? null;
-        }
+        return DB::transaction(function () use ($validated, $request) {
+            if (! empty($validated['dusun_id'])) {
+                $dusunObj = Dusun::find($validated['dusun_id']);
+                $validated['dusun'] = $dusunObj?->name ?? $validated['dusun'] ?? null;
+            }
 
-        $taxObject = TaxObject::create($validated);
+            $taxObject = TaxObject::create([
+                'nop' => $validated['nop'],
+                'taxpayer_id' => $validated['taxpayer_id'],
+                'address' => $validated['address'] ?? null,
+                'rt' => $validated['rt'] ?? null,
+                'rw' => $validated['rw'] ?? null,
+                'dusun_id' => $validated['dusun_id'] ?? null,
+                'dusun' => $validated['dusun'] ?? null,
+                'status' => $validated['status'],
+                'notes' => $validated['notes'] ?? null,
+            ]);
 
-        AuditLog::log('create', "Menambahkan Objek Pajak NOP: {$taxObject->formatted_nop}", $taxObject);
+            AuditLog::log('create', "Menambahkan Objek Pajak NOP: {$taxObject->formatted_nop}", $taxObject);
 
-        return redirect()->route('tax-objects.index')->with('success', "Objek Pajak NOP {$taxObject->formatted_nop} berhasil ditambahkan.");
+            if ($request->boolean('include_components')) {
+                $village = Village::current();
+                $taxYear = (int)($validated['tax_year'] ?? $village->active_tax_year);
+
+                $componentsData = [
+                    'bumi' => [
+                        'area' => (float)($validated['bumi_area_m2'] ?? 0),
+                        'class' => $validated['bumi_class_code'] ?? null,
+                        'njop_m2' => (float)($validated['bumi_njop_per_m2'] ?? 0),
+                    ],
+                    'bangunan' => [
+                        'area' => (float)($validated['bangunan_area_m2'] ?? 0),
+                        'class' => $validated['bangunan_class_code'] ?? null,
+                        'njop_m2' => (float)($validated['bangunan_njop_per_m2'] ?? 0),
+                    ],
+                    'bumi_bersama' => [
+                        'area' => (float)($validated['bumi_bersama_area_m2'] ?? 0),
+                        'class' => $validated['bumi_bersama_class_code'] ?? null,
+                        'njop_m2' => (float)($validated['bumi_bersama_njop_per_m2'] ?? 0),
+                    ],
+                    'bangunan_bersama' => [
+                        'area' => (float)($validated['bangunan_bersama_area_m2'] ?? 0),
+                        'class' => $validated['bangunan_bersama_class_code'] ?? null,
+                        'njop_m2' => (float)($validated['bangunan_bersama_njop_per_m2'] ?? 0),
+                    ],
+                ];
+
+                $totalNjopDasar = 0;
+                foreach ($componentsData as $type => $comp) {
+                    $totalNjopComp = $comp['area'] * $comp['njop_m2'];
+                    $totalNjopDasar += $totalNjopComp;
+
+                    if ($comp['area'] > 0 || $comp['njop_m2'] > 0) {
+                        TaxObjectComponent::updateOrCreate(
+                            [
+                                'tax_object_id' => $taxObject->id,
+                                'type' => $type,
+                                'tax_year' => $taxYear,
+                            ],
+                            [
+                                'area_m2' => $comp['area'],
+                                'class_code' => $comp['class'],
+                                'njop_per_m2' => $comp['njop_m2'],
+                                'total_njop' => $totalNjopComp,
+                            ]
+                        );
+                    }
+                }
+
+                $njoptkp = isset($validated['njoptkp']) && $validated['njoptkp'] !== null ? (float)$validated['njoptkp'] : 10000000;
+                $njopPerhitungan = max(0, $totalNjopDasar - $njoptkp);
+                $tarifPercent = (float)($village->tax_rate_percent ?? 0.100);
+                $pbbTerutang = round($njopPerhitungan * ($tarifPercent / 100));
+
+                $sppt = Sppt::create([
+                    'tax_object_id' => $taxObject->id,
+                    'tax_year' => $taxYear,
+                    'due_date' => $validated['due_date'] ?? "{$taxYear}-09-30",
+                    'njop_dasar' => $totalNjopDasar,
+                    'njoptkp' => $njoptkp,
+                    'njop_perhitungan' => $njopPerhitungan,
+                    'tarif_percent' => $tarifPercent,
+                    'pbb_terutang' => $pbbTerutang,
+                    'fine_amount' => 0,
+                    'total_bill' => $pbbTerutang,
+                    'paid_amount' => 0,
+                    'status' => 'unpaid',
+                    'is_to_blocked' => $taxObject->isTo(),
+                ]);
+
+                AuditLog::log('create', "Menerbitkan SPPT NOP: {$taxObject->formatted_nop} Tahun {$taxYear} sebesar Rp " . number_format($pbbTerutang, 0, ',', '.'), $sppt);
+
+                return redirect()->route('tax-objects.index')->with('success', "Objek Pajak NOP {$taxObject->formatted_nop} dan SPPT Tahun {$taxYear} (Tagihan: Rp " . number_format($pbbTerutang, 0, ',', '.') . ") berhasil disimpan.");
+            }
+
+            return redirect()->route('tax-objects.index')->with('success', "Objek Pajak NOP {$taxObject->formatted_nop} berhasil ditambahkan.");
+        });
     }
 
     public function edit(TaxObject $taxObject): View
