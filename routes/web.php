@@ -104,11 +104,15 @@ Route::middleware('auth')->group(function () {
     // Master Data Pajak & SPPT (Semua petugas bisa melihat data)
     Route::get('/taxpayers', [\App\Http\Controllers\TaxpayerController::class, 'index'])->name('taxpayers.index');
     Route::get('/tax-objects', [\App\Http\Controllers\TaxObjectController::class, 'index'])->name('tax-objects.index');
-    Route::get('/tax-objects/{taxObject}', [\App\Http\Controllers\TaxObjectController::class, 'show'])->name('tax-objects.show');
     Route::get('/sppts', [\App\Http\Controllers\SpptController::class, 'index'])->name('sppts.index');
 
     // Autocomplete API for Tax Objects & NOP
     Route::get('/api/tax-objects/search', [\App\Http\Controllers\TaxObjectController::class, 'apiSearch'])->name('api.tax-objects.search');
+
+    // Detail Objek Pajak (Semua petugas bisa melihat data)
+    Route::get('/tax-objects/{taxObject}', [\App\Http\Controllers\TaxObjectController::class, 'show'])
+        ->name('tax-objects.show')
+        ->whereNumber('taxObject');
 
     // Kolektor Master Data & DHKP Ingestion
     Route::middleware('role:kolektor')->group(function () {
@@ -119,11 +123,11 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/tax-objects/create', [\App\Http\Controllers\TaxObjectController::class, 'create'])->name('tax-objects.create');
         Route::post('/tax-objects', [\App\Http\Controllers\TaxObjectController::class, 'store'])->name('tax-objects.store');
-        Route::get('/tax-objects/{taxObject}/edit', [\App\Http\Controllers\TaxObjectController::class, 'edit'])->name('tax-objects.edit');
-        Route::put('/tax-objects/{taxObject}', [\App\Http\Controllers\TaxObjectController::class, 'update'])->name('tax-objects.update');
-        Route::delete('/tax-objects/{taxObject}', [\App\Http\Controllers\TaxObjectController::class, 'destroy'])->name('tax-objects.destroy');
-        Route::post('/tax-objects/{taxObject}/deactivate', [\App\Http\Controllers\TaxObjectController::class, 'deactivate'])->name('tax-objects.deactivate');
-        Route::post('/tax-objects/{taxObject}/activate', [\App\Http\Controllers\TaxObjectController::class, 'activate'])->name('tax-objects.activate');
+        Route::get('/tax-objects/{taxObject}/edit', [\App\Http\Controllers\TaxObjectController::class, 'edit'])->name('tax-objects.edit')->whereNumber('taxObject');
+        Route::put('/tax-objects/{taxObject}', [\App\Http\Controllers\TaxObjectController::class, 'update'])->name('tax-objects.update')->whereNumber('taxObject');
+        Route::delete('/tax-objects/{taxObject}', [\App\Http\Controllers\TaxObjectController::class, 'destroy'])->name('tax-objects.destroy')->whereNumber('taxObject');
+        Route::post('/tax-objects/{taxObject}/deactivate', [\App\Http\Controllers\TaxObjectController::class, 'deactivate'])->name('tax-objects.deactivate')->whereNumber('taxObject');
+        Route::post('/tax-objects/{taxObject}/activate', [\App\Http\Controllers\TaxObjectController::class, 'activate'])->name('tax-objects.activate')->whereNumber('taxObject');
 
         Route::get('/sppts/create', [\App\Http\Controllers\SpptController::class, 'create'])->name('sppts.create');
         Route::post('/sppts', [\App\Http\Controllers\SpptController::class, 'store'])->name('sppts.store');

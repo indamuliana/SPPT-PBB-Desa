@@ -78,6 +78,19 @@ class TaxMasterAndDhkpTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_access_tax_objects_create_page(): void
+    {
+        $response = $this->actingAs($this->admin)->get('/tax-objects/create');
+        $response->assertStatus(200);
+        $response->assertSee('Tambah Objek Pajak (NOP)');
+    }
+
+    public function test_non_admin_cannot_access_tax_objects_create_page(): void
+    {
+        $response = $this->actingAs($this->kadus)->get('/tax-objects/create');
+        $response->assertStatus(403);
+    }
+
     public function test_nop_preserves_leading_zero(): void
     {
         $wp = Taxpayer::create(['name' => 'Siti Rohimah']);
